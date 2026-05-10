@@ -308,6 +308,21 @@
     opacity: 0.35;
     cursor: not-allowed;
   }
+  .starter-chip button {
+    background: none;
+    border: none;
+    color: currentColor;
+    cursor: pointer;
+    padding: 0;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    opacity: 0.8;
+  }
 
   /* Roster */
   .roster-add {
@@ -774,6 +789,11 @@ const fmtTime = (totalSec) => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
+const fmtMinutes = (mins) => {
+  if (!Number.isFinite(mins)) return '0';
+  return Number.isInteger(mins) ? String(mins) : String(Math.round(mins * 100) / 100);
+};
+
 // Fisher-Yates shuffle (unbiased, unlike Array.sort with random comparator)
 const shuffle = (arr) => {
   const a = [...arr];
@@ -875,6 +895,108 @@ function computeRotation(playerNames, K, numStints) {
   return { stints, totalsByPlayer: { ...stintsPlayed } };
 }
 
+function getGoalkeeperPlayers(config) {
+  if (!config.hasGoalkeeper) return [];
+  const selected = config.goalkeeperNames || config.players;
+  return config.players.filter(p => selected.includes(p));
+}
+
+function getGoalkeeperSchedule(config, numStints, avoidFirst = []) {
+  if (!config.hasGoalkeeper) return Array(numStints).fill(null);
+  let keepers = getGoalkeeperPlayers(config);
+  if (keepers.length === 0) return Array(numStints).fill(null);
+
+  const firstPreferred = keepers.find(p => !avoidFirst.includes(p));
+  if (firstPreferred) {
+    keepers = [firstPreferred, ...keepers.filter(p => p !== firstPreferred)];
+  }
+
+  const blockStints = Math.max(1, parseInt(config.goalkeeperBlockStints, 10) || 1);
+  return Array.from({ length: numStints }, (_, i) => keepers[Math.floor(i / blockStints) % keepers.length]);
+}
+
+function computeRotationWithGoalkeepers(playerNames, K, numStints, goalkeeperSchedule) {
+  if (!goalkeeperSchedule || goalkeeperSchedule.every(gk => !gk)) {
+    return computeRotation(playerNames, K, numStints);
+  }
+
+  const totals = {};
+  const goalkeeperTotals = {};
+  const lastAnchored = {};
+  const origOrder = {};
+  playerNames.forEach((p, i) => {
+    totals[p] = 0;
+    goalkeeperTotals[p] = 0;
+    lastAnchored[p] = -1000;
+    origOrder[p] = i;
+  });
+
+  const stints = [];
+  let onField = [];
+  let bench = [...playerNames];
+
+  for (let s = 0; s < numStints; s++) {
+    const goalkeeper = goalkeeperSchedule[s];
+    const previousGoalkeeper = s > 0 ? goalkeeperSchedule[s - 1] : null;
+    const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== goalkeeper
+      ? previousGoalkeeper
+      : null;
+    if (goalkeeper && goalkeeperTotals[goalkeeper] !== undefined) goalkeeperTotals[goalkeeper]++;
+
+    const eligible = playerNames.filter(p => p !== goalkeeper && p !== restingGoalkeeper);
+    onField = onField.filter(p => eligible.includes(p));
+    bench = eligible.filter(p => !onField.includes(p));
+
+    const effectiveK = Math.min(K, eligible.length);
+    let newOn;
+    let newOff;
+
+    if (s === 0 || onField.length === 0) {
+      newOn = eligible.slice(0, effectiveK);
+      newOff = eligible.filter(p => !newOn.includes(p));
+    } else if (eligible.length <= effectiveK) {
+      newOn = [...eligible];
+      newOff = [];
+    } else {
+      const N = eligible.length;
+      const numAnchors = Math.max(0, 2 * effectiveK - N);
+      const numSubs = effectiveK - numAnchors;
+      const onFieldSorted = [...onField].sort((a, b) => {
+        if (totals[a] !== totals[b]) return totals[a] - totals[b];
+        if (lastAnchored[a] !== lastAnchored[b]) return lastAnchored[a] - lastAnchored[b];
+        return (origOrder[a] ?? 999) - (origOrder[b] ?? 999);
+      });
+      const anchors = onFieldSorted.slice(0, numAnchors);
+      anchors.forEach(p => lastAnchored[p] = s);
+      const goingOff = onField.filter(p => !anchors.includes(p));
+      const benchSorted = bench.sort((a, b) => {
+        if (totals[a] !== totals[b]) return totals[a] - totals[b];
+        return (origOrder[a] ?? 999) - (origOrder[b] ?? 999);
+      });
+      const comingOn = benchSorted.slice(0, numSubs);
+      const stayingBench = benchSorted.slice(numSubs);
+      newOn = [...anchors, ...comingOn];
+      newOff = [...stayingBench, ...goingOff];
+    }
+
+    if (restingGoalkeeper) newOff = [...newOff, restingGoalkeeper];
+    newOn.forEach(p => totals[p] = (totals[p] || 0) + 1);
+    const prevOn = stints[s - 1]?.onField || [];
+    stints.push({
+      idx: s,
+      goalkeeper,
+      onField: [...newOn].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
+      offField: [...newOff].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
+      subOut: prevOn.filter(p => !newOn.includes(p)),
+      subIn: newOn.filter(p => !prevOn.includes(p)),
+    });
+    onField = newOn;
+    bench = newOff;
+  }
+
+  return { stints, totalsByPlayer: totals, goalkeeperTotals };
+}
+
 // ─────────────────────────────────────────────────────────
 // Audio (Web Audio API chimes)
 // ─────────────────────────────────────────────────────────
@@ -941,7 +1063,11 @@ function SetupScreen({ config, setConfig, onGenerate }) {
     const trimmed = newName.trim();
     if (!trimmed) return;
     if (config.players.some(p => p.toLowerCase() === trimmed.toLowerCase())) return;
-    setConfig({ ...config, players: [...config.players, trimmed] });
+    setConfig({
+      ...config,
+      players: [...config.players, trimmed],
+      goalkeeperNames: [...(config.goalkeeperNames || []), trimmed],
+    });
     setNewName('');
     inputRef.current?.focus();
   };
@@ -951,15 +1077,19 @@ function SetupScreen({ config, setConfig, onGenerate }) {
       ...config,
       players: config.players.filter(p => p !== name),
       goalkeeperName: config.goalkeeperName === name ? '' : config.goalkeeperName,
+      goalkeeperNames: (config.goalkeeperNames || []).filter(p => p !== name),
       chosenStarters: config.chosenStarters.filter(p => p !== name),
     });
   };
 
-  const setGK = (name) => {
+  const toggleGoalkeeperAllowed = (name) => {
+    const current = config.goalkeeperNames || config.players;
+    const isAllowed = current.includes(name);
     setConfig({
       ...config,
-      goalkeeperName: name,
-      chosenStarters: config.chosenStarters.filter(p => p !== name),
+      goalkeeperNames: isAllowed
+        ? current.filter(p => p !== name)
+        : [...current, name],
     });
   };
 
@@ -970,10 +1100,11 @@ function SetupScreen({ config, setConfig, onGenerate }) {
 
   const toggleStarter = (name) => {
     const isCurrent = config.chosenStarters.includes(name);
+    const validChosenCount = config.chosenStarters.filter(p => config.players.includes(p)).length;
     if (isCurrent) {
       setConfig({ ...config, chosenStarters: config.chosenStarters.filter(p => p !== name) });
     } else {
-      if (config.chosenStarters.length >= startersNeeded) return;
+      if (validChosenCount >= startersNeeded) return;
       setConfig({ ...config, chosenStarters: [...config.chosenStarters, name] });
     }
   };
@@ -993,19 +1124,23 @@ function SetupScreen({ config, setConfig, onGenerate }) {
     const fieldRotation = config.hasGoalkeeper
       ? config.numOnField - 1
       : config.numOnField;
-    const rotationPlayers = config.hasGoalkeeper && config.goalkeeperName
-      ? config.players.length - 1
+    const goalkeeperPlayers = getGoalkeeperPlayers(config);
+    const needsKeeperRestSpot = config.hasGoalkeeper && goalkeeperPlayers.length > 1;
+    const rotationPlayers = config.hasGoalkeeper
+      ? Math.max(0, config.players.length - (needsKeeperRestSpot ? 2 : 1))
       : config.players.length;
+    const minPlayers = fieldRotation + (config.hasGoalkeeper ? (needsKeeperRestSpot ? 2 : 1) : 0);
 
     if (config.hasGoalkeeper) {
-      if (!config.goalkeeperName) errors.push('Designate a goalkeeper');
+      if (goalkeeperPlayers.length === 0) errors.push('Allow at least one goalkeeper');
       if (config.numOnField < 2) errors.push('Need ≥2 on field if there is a GK');
+      if ((config.goalkeeperBlockStints || 0) < 1) errors.push('GK block length must be at least 1 stint');
     }
     if (rotationPlayers < fieldRotation && config.players.length > 0) {
-      errors.push(`Need at least ${fieldRotation + (config.hasGoalkeeper ? 1 : 0)} players for ${config.numOnField} on field${config.hasGoalkeeper ? ' (incl. GK)' : ''}`);
+      errors.push(`Need at least ${minPlayers} players for ${config.numOnField} on field${needsKeeperRestSpot ? ' with a resting outgoing GK' : (config.hasGoalkeeper ? ' (incl. GK)' : '')}`);
     }
     if (config.startersMode === 'manual' && rotationPlayers >= fieldRotation && config.players.length > 0) {
-      const validChosen = config.chosenStarters.filter(p => config.players.includes(p) && p !== config.goalkeeperName);
+      const validChosen = config.chosenStarters.filter(p => config.players.includes(p));
       if (validChosen.length !== startersNeeded) {
         errors.push(`Choose exactly ${startersNeeded} starter${startersNeeded === 1 ? '' : 's'} (${validChosen.length}/${startersNeeded} picked)`);
       }
@@ -1032,10 +1167,11 @@ function SetupScreen({ config, setConfig, onGenerate }) {
             <label>Stint length (min)</label>
             <input
               type="number"
-              inputMode="numeric"
-              min="1"
+              inputMode="decimal"
+              min="0.1"
+              step="any"
               value={config.stintLength}
-              onChange={e => setConfig({ ...config, stintLength: parseInt(e.target.value) || 0 })}
+              onChange={e => setConfig({ ...config, stintLength: parseFloat(e.target.value) || 0 })}
             />
           </div>
           <div className="field">
@@ -1054,17 +1190,47 @@ function SetupScreen({ config, setConfig, onGenerate }) {
           <input
             type="checkbox"
             checked={config.hasGoalkeeper}
-            onChange={e => setConfig({ ...config, hasGoalkeeper: e.target.checked })}
+            onChange={e => setConfig({
+              ...config,
+              hasGoalkeeper: e.target.checked,
+              goalkeeperNames: (config.goalkeeperNames || []).length > 0 ? config.goalkeeperNames : config.players,
+            })}
           />
           <span className="toggle-track" />
-          <span className="toggle-label">Use a goalkeeper</span>
+          <span className="toggle-label">Rotate goalkeepers</span>
         </label>
         {config.hasGoalkeeper && (
-          <div className="help-note">
-            One designated GK plays the entire game. Rotation runs over the remaining
-            {' '}{config.players.length - (config.goalkeeperName ? 1 : 0)} players for
-            {' '}{Math.max(0, config.numOnField - 1)} field positions.
-            <br/>Tap a player below to designate them as goalkeeper.
+          <div>
+            <div className="help-note">
+              Goalkeepers rotate in contiguous blocks. Field rotation uses
+              {' '}{Math.max(0, config.numOnField - 1)} field positions while the current keeper is in goal.
+            </div>
+            <div className="field" style={{ marginTop: 10, maxWidth: 180 }}>
+              <label>GK block (stints)</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={config.goalkeeperBlockStints}
+                onChange={e => setConfig({ ...config, goalkeeperBlockStints: parseInt(e.target.value, 10) || 1 })}
+              />
+            </div>
+            <div className="starter-list" style={{ marginTop: 10 }}>
+              {config.players.map(p => {
+                const isAllowed = (config.goalkeeperNames || config.players).includes(p);
+                return (
+                  <span
+                    key={p}
+                    className={`starter-chip ${isAllowed ? 'selected' : ''}`}
+                    onClick={() => toggleGoalkeeperAllowed(p)}
+                    title={isAllowed ? 'Remove from goalkeeper rotation' : 'Add to goalkeeper rotation'}
+                  >
+                    {p}
+                    {isAllowed && <button onClick={(e) => { e.stopPropagation(); toggleGoalkeeperAllowed(p); }} aria-label={`Remove ${p} from goalkeeper rotation`}>×</button>}
+                  </span>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -1084,14 +1250,11 @@ function SetupScreen({ config, setConfig, onGenerate }) {
         </div>
         <div className="roster-list">
           {config.players.map(p => {
-            const isGK = config.hasGoalkeeper && config.goalkeeperName === p;
+            const isGK = config.hasGoalkeeper && (config.goalkeeperNames || config.players).includes(p);
             return (
               <span
                 key={p}
                 className={`roster-chip ${isGK ? 'gk' : ''}`}
-                onClick={() => config.hasGoalkeeper && setGK(p)}
-                style={{ cursor: config.hasGoalkeeper ? 'pointer' : 'default' }}
-                title={config.hasGoalkeeper ? 'Tap to set as goalkeeper' : ''}
               >
                 {isGK && <span className="gk-tag">GK</span>}
                 {p}
@@ -1124,25 +1287,24 @@ function SetupScreen({ config, setConfig, onGenerate }) {
               />
               Choose
               {config.startersMode === 'manual' && (
-                <span className="count">{config.chosenStarters.filter(p => config.players.includes(p) && p !== config.goalkeeperName).length}/{startersNeeded}</span>
+                <span className="count">{config.chosenStarters.filter(p => config.players.includes(p)).length}/{startersNeeded}</span>
               )}
             </label>
           </div>
           {config.startersMode === 'manual' && (
             <>
               <div className="help-note">
-                Tap to pick the {startersNeeded} {startersNeeded === 1 ? 'player' : 'players'} who'll start on the field
-                {config.hasGoalkeeper && config.goalkeeperName && <> (alongside <strong>{config.goalkeeperName}</strong> in goal)</>}.
+                Tap to pick the {startersNeeded} {startersNeeded === 1 ? 'player' : 'players'} who'll start on the field.
+                {config.hasGoalkeeper && <> The first keeper will be chosen from outside that group when possible.</>}
               </div>
               <div className="starter-list">
-                {config.players.filter(p => p !== config.goalkeeperName).length === 0 && (
+                {config.players.length === 0 && (
                   <span style={{ color: 'var(--dim)', fontSize: 13, fontStyle: 'italic' }}>Add players to the roster first</span>
                 )}
                 {config.players
-                  .filter(p => p !== config.goalkeeperName)
                   .map(p => {
                     const isStarter = config.chosenStarters.includes(p);
-                    const isFull = !isStarter && config.chosenStarters.length >= startersNeeded;
+                    const isFull = !isStarter && config.chosenStarters.filter(p => config.players.includes(p)).length >= startersNeeded;
                     return (
                       <span
                         key={p}
@@ -1188,10 +1350,10 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
       <div className="section">
         <div className="section-title">Rotation Plan</div>
         <div className="help-note">
-          {rotation.stints.length} stints of {config.stintLength} min ·
+          {rotation.stints.length} stints of {fmtMinutes(config.stintLength)} min ·
           {' '}{config.players.length} players ·
           {' '}{config.numOnField} on field
-          {config.hasGoalkeeper && config.goalkeeperName && <> · GK: <strong>{config.goalkeeperName}</strong></>}
+          {config.hasGoalkeeper && <> · GK block: <strong>{config.goalkeeperBlockStints}</strong> stint{config.goalkeeperBlockStints === 1 ? '' : 's'}</>}
         </div>
 
         <div className="rot-table">
@@ -1210,8 +1372,8 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
                 </div>
                 <div className="rot-stint-content">
                   <div className="rot-onfield">
-                    {config.hasGoalkeeper && config.goalkeeperName && (
-                      <span className="player-pill gk">{config.goalkeeperName} <span style={{fontSize:9,opacity:0.7}}>GK</span></span>
+                    {config.hasGoalkeeper && s.goalkeeper && (
+                      <span className="player-pill gk">{s.goalkeeper} <span style={{fontSize:9,opacity:0.7}}>GK</span></span>
                     )}
                     {s.onField.map(p => (
                       <span className="player-pill" key={p}>{p}</span>
@@ -1235,18 +1397,15 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
       <div className="totals">
         <div className="section-title" style={{ margin: 0 }}>Projected Minutes</div>
         <div className="totals-grid">
-          {config.hasGoalkeeper && config.goalkeeperName && (
-            <div className="total-item gk">
-              <span className="name">{config.goalkeeperName}</span>
-              <span className="mins">{config.gameLength}m GK</span>
-            </div>
-          )}
           {Object.entries(rotation.totalsByPlayer)
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => (b[1] + (rotation.goalkeeperTotals?.[b[0]] || 0)) - (a[1] + (rotation.goalkeeperTotals?.[a[0]] || 0)))
             .map(([name, n]) => (
               <div className="total-item" key={name}>
                 <span className="name">{name}</span>
-                <span className="mins">{n * config.stintLength}m</span>
+                <span className="mins">
+                  {fmtMinutes(n * config.stintLength)}m
+                  {rotation.goalkeeperTotals?.[name] ? ` · ${fmtMinutes(rotation.goalkeeperTotals[name] * config.stintLength)}m GK` : ''}
+                </span>
               </div>
             ))}
         </div>
@@ -1271,8 +1430,37 @@ function GameScreen({ config, initialRotation, onExit }) {
   const gameLengthSec = config.gameLength * 60;
   const halftimeSec = gameLengthSec / 2;
 
+  const withGoalkeeperFallback = useCallback((baseRotation) => {
+    if (!config.hasGoalkeeper || baseRotation.stints.every(s => s.goalkeeper)) return baseRotation;
+
+    const schedule = getGoalkeeperSchedule(config, baseRotation.stints.length, baseRotation.stints[0]?.onField || []);
+    return {
+      ...baseRotation,
+      goalkeeperTotals: schedule.reduce((totals, goalkeeper) => {
+        if (goalkeeper) totals[goalkeeper] = (totals[goalkeeper] || 0) + 1;
+        return totals;
+      }, { ...(baseRotation.goalkeeperTotals || {}) }),
+      stints: baseRotation.stints.map((s, i) => {
+        const goalkeeper = s.goalkeeper || schedule[i] || null;
+        const previousGoalkeeper = i > 0 ? (baseRotation.stints[i - 1]?.goalkeeper || schedule[i - 1] || null) : null;
+        const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== goalkeeper
+          ? previousGoalkeeper
+          : null;
+        return {
+          ...s,
+          goalkeeper,
+          onField: s.onField.filter(p => p !== goalkeeper && p !== restingGoalkeeper),
+          offField: [
+            ...s.offField.filter(p => p !== goalkeeper && p !== restingGoalkeeper),
+            ...(restingGoalkeeper ? [restingGoalkeeper] : []),
+          ],
+        };
+      }),
+    };
+  }, [config]);
+
   // Live rotation (mutable when manual subs/roster changes happen)
-  const [rotation, setRotation] = useState(initialRotation);
+  const [rotation, setRotation] = useState(() => withGoalkeeperFallback(initialRotation));
 
   // Timer state
   const [running, setRunning] = useState(false);
@@ -1412,7 +1600,7 @@ function GameScreen({ config, initialRotation, onExit }) {
 
   // ───── Manual sub mode ─────
   const [swapMode, setSwapMode] = useState(false);
-  const [swapSelected, setSwapSelected] = useState(null); // player name
+  const [swapSelected, setSwapSelected] = useState(null); // { name, role }
   const startSwap = () => {
     setSwapMode(true);
     setSwapSelected(null);
@@ -1421,27 +1609,54 @@ function GameScreen({ config, initialRotation, onExit }) {
     setSwapMode(false);
     setSwapSelected(null);
   };
-  const handleSwapTap = (name, isOnField) => {
+  const handleSwapTap = (name, role) => {
     if (!swapSelected) {
-      setSwapSelected({ name, isOnField });
+      setSwapSelected({ name, role });
       return;
     }
-    if (swapSelected.name === name) {
+    if (swapSelected.name === name && swapSelected.role === role) {
       setSwapSelected(null);
       return;
     }
-    if (swapSelected.isOnField === isOnField) {
+    if (swapSelected.role === role) {
       // re-select
-      setSwapSelected({ name, isOnField });
+      setSwapSelected({ name, role });
       return;
     }
-    // perform swap: replan from currentStintIdx with new on-field set
-    const onFieldName = swapSelected.isOnField ? swapSelected.name : name;
-    const offFieldName = swapSelected.isOnField ? name : swapSelected.name;
 
-    // New on-field for currentStintIdx: replace onFieldName with offFieldName
-    const newOnField = currentStint.onField.map(p => p === onFieldName ? offFieldName : p);
-    const newOffField = currentStint.offField.map(p => p === offFieldName ? onFieldName : p);
+    const picks = [swapSelected, { name, role }];
+    const goalkeeperPick = picks.find(p => p.role === 'goalkeeper');
+    const fieldPick = picks.find(p => p.role === 'field');
+    const benchPick = picks.find(p => p.role === 'bench');
+    let newOnField = [...currentStint.onField];
+    let newOffField = [...currentStint.offField];
+    const goalkeeperSchedule = rotation.stints.map(s => s.goalkeeper || null);
+
+    if (goalkeeperPick) {
+      const newGoalkeeper = fieldPick?.name || benchPick?.name;
+      if (!newGoalkeeper) {
+        setSwapSelected({ name, role });
+        return;
+      }
+      const oldGoalkeeper = currentStint.goalkeeper;
+      for (let i = currentStintIdx; i < goalkeeperSchedule.length; i++) {
+        if (goalkeeperSchedule[i] !== oldGoalkeeper) break;
+        goalkeeperSchedule[i] = newGoalkeeper;
+      }
+      if (fieldPick) {
+        newOnField = currentStint.onField.map(p => p === fieldPick.name ? oldGoalkeeper : p).filter(Boolean);
+        newOffField = currentStint.offField.filter(p => p !== newGoalkeeper && p !== oldGoalkeeper);
+      } else {
+        newOnField = currentStint.onField.filter(p => p !== newGoalkeeper && p !== oldGoalkeeper);
+        newOffField = currentStint.offField.map(p => p === benchPick.name ? oldGoalkeeper : p).filter(Boolean);
+      }
+    } else {
+      // perform field/bench swap: replan from currentStintIdx with new on-field set
+      const onFieldName = fieldPick.name;
+      const offFieldName = benchPick.name;
+      newOnField = currentStint.onField.map(p => p === onFieldName ? offFieldName : p);
+      newOffField = currentStint.offField.map(p => p === offFieldName ? onFieldName : p);
+    }
 
     // Replan future stints
     const newRotation = replanFromStint({
@@ -1450,7 +1665,8 @@ function GameScreen({ config, initialRotation, onExit }) {
       newOnField,
       newOffField,
       K: config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField,
-      allRotationPlayers: getRotationPlayers(config),
+      allRotationPlayers: [...getRotationPlayers(config), ...extraPlayers].filter(p => !removedPlayers.has(p)),
+      goalkeeperSchedule,
       totalStints: rotation.stints.length,
     });
     setRotation(newRotation);
@@ -1479,6 +1695,7 @@ function GameScreen({ config, initialRotation, onExit }) {
       newOffField,
       K: config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField,
       allRotationPlayers: [...getRotationPlayers(config), ...extraPlayers, trimmed].filter(p => !removedPlayers.has(p)),
+      goalkeeperSchedule: rotation.stints.map(s => s.goalkeeper || null),
       totalStints: rotation.stints.length,
     });
     setRotation(newRotation);
@@ -1486,8 +1703,8 @@ function GameScreen({ config, initialRotation, onExit }) {
   };
 
   const removeRosterPlayer = (name) => {
-    if (config.hasGoalkeeper && config.goalkeeperName === name) {
-      alert(`${name} is the goalkeeper and can't be removed mid-game from this UI. Edit setup to change GK.`);
+    if (config.hasGoalkeeper && rotation.stints.some((s, i) => i >= currentStintIdx && s.goalkeeper === name)) {
+      alert(`${name} is scheduled for goalkeeper duty. Edit setup to change the GK rotation.`);
       return;
     }
     if (!confirm(`Remove ${name} from the rest of the game?`)) return;
@@ -1514,6 +1731,7 @@ function GameScreen({ config, initialRotation, onExit }) {
       newOffField,
       K: Math.min(newOnField.length, config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField),
       allRotationPlayers: remainingPlayers,
+      goalkeeperSchedule: rotation.stints.map(s => s.goalkeeper || null),
       totalStints: rotation.stints.length,
     });
     setRotation(newRotation);
@@ -1522,20 +1740,25 @@ function GameScreen({ config, initialRotation, onExit }) {
   // ───── Live totals ─────
   const liveTotals = useMemo(() => {
     const totals = {};
+    const goalkeeperTotals = {};
     const allPlayers = [...getRotationPlayers(config), ...extraPlayers];
-    allPlayers.forEach(p => totals[p] = 0);
+    allPlayers.forEach(p => {
+      totals[p] = 0;
+      goalkeeperTotals[p] = 0;
+    });
     rotation.stints.forEach((s, i) => {
       const stintStartSec = i * stintLengthSec;
       const stintEndSec = (i + 1) * stintLengthSec;
       let cappedEnd = Math.min(stintEndSec, elapsedSec);
       if (cappedEnd > stintStartSec) {
         const playedSec = cappedEnd - stintStartSec;
+        if (s.goalkeeper) goalkeeperTotals[s.goalkeeper] = (goalkeeperTotals[s.goalkeeper] || 0) + playedSec;
         s.onField.forEach(p => {
           totals[p] = (totals[p] || 0) + playedSec;
         });
       }
     });
-    return totals;
+    return { field: totals, goalkeeper: goalkeeperTotals };
   }, [rotation, elapsedSec, stintLengthSec, config, extraPlayers]);
 
   const clockClass = isFullTime ? 'paused' : (running ? 'running' : 'paused');
@@ -1582,8 +1805,8 @@ function GameScreen({ config, initialRotation, onExit }) {
         </div>
         {!swapMode ? (
           <div className="now-on">
-            {config.hasGoalkeeper && config.goalkeeperName && (
-              <span className="player-pill gk">{config.goalkeeperName} <span style={{fontSize:9,opacity:0.7}}>GK</span></span>
+            {config.hasGoalkeeper && currentStint.goalkeeper && (
+              <span className="player-pill gk">{currentStint.goalkeeper} <span style={{fontSize:9,opacity:0.7}}>GK</span></span>
             )}
             {currentStint.onField.map(p => (
               <span className="player-pill" key={p}>{p}</span>
@@ -1592,15 +1815,28 @@ function GameScreen({ config, initialRotation, onExit }) {
         ) : (
           <div>
             <div className="manual-instructions">
-              Tap one ON-field player and one OFF-field player to swap them. The rotation will replan.
+              Tap two players to swap field, bench, or goalkeeper roles. The rotation will replan.
             </div>
+            {config.hasGoalkeeper && currentStint.goalkeeper && (
+              <>
+                <div className="swap-section-label">In goal</div>
+                <div className="swap-list">
+                  <span
+                    className={`player-pill gk ${swapSelected?.name === currentStint.goalkeeper && swapSelected?.role === 'goalkeeper' ? 'selected' : ''}`}
+                    onClick={() => handleSwapTap(currentStint.goalkeeper, 'goalkeeper')}
+                  >
+                    {currentStint.goalkeeper}
+                  </span>
+                </div>
+              </>
+            )}
             <div className="swap-section-label">On field</div>
             <div className="swap-list">
               {currentStint.onField.map(p => (
                 <span
                   key={p}
-                  className={`player-pill ${swapSelected?.name === p ? 'selected' : ''}`}
-                  onClick={() => handleSwapTap(p, true)}
+                  className={`player-pill ${swapSelected?.name === p && swapSelected?.role === 'field' ? 'selected' : ''}`}
+                  onClick={() => handleSwapTap(p, 'field')}
                 >{p}</span>
               ))}
             </div>
@@ -1610,8 +1846,8 @@ function GameScreen({ config, initialRotation, onExit }) {
               {currentStint.offField.map(p => (
                 <span
                   key={p}
-                  className={`player-pill off ${swapSelected?.name === p ? 'selected' : ''}`}
-                  onClick={() => handleSwapTap(p, false)}
+                  className={`player-pill off ${swapSelected?.name === p && swapSelected?.role === 'bench' ? 'selected' : ''}`}
+                  onClick={() => handleSwapTap(p, 'bench')}
                 >{p}</span>
               ))}
             </div>
@@ -1628,6 +1864,14 @@ function GameScreen({ config, initialRotation, onExit }) {
             </div>
             {nextStint.subOut.length > 0 ? (
               <div className="next-sub">
+                {nextStint.goalkeeper && nextStint.goalkeeper !== currentStint.goalkeeper && (
+                  <div className="sub-side in">
+                    <div className="label">GK</div>
+                    <div className="pills">
+                      <span className="player-pill gk">{nextStint.goalkeeper}</span>
+                    </div>
+                  </div>
+                )}
                 <div className="sub-side out">
                   <div className="label">↓ OUT</div>
                   <div className="pills">
@@ -1639,6 +1883,15 @@ function GameScreen({ config, initialRotation, onExit }) {
                   <div className="label">↑ IN</div>
                   <div className="pills">
                     {nextStint.subIn.map(p => <span key={p} className="player-pill">{p}</span>)}
+                  </div>
+                </div>
+              </div>
+            ) : nextStint.goalkeeper && nextStint.goalkeeper !== currentStint.goalkeeper ? (
+              <div className="next-sub">
+                <div className="sub-side in">
+                  <div className="label">GK</div>
+                  <div className="pills">
+                    <span className="player-pill gk">{nextStint.goalkeeper}</span>
                   </div>
                 </div>
               </div>
@@ -1675,19 +1928,16 @@ function GameScreen({ config, initialRotation, onExit }) {
       <div className="totals live-totals">
         <div className="section-title" style={{ margin: 0 }}>Minutes played (live)</div>
         <div className="totals-grid">
-          {config.hasGoalkeeper && config.goalkeeperName && (
-            <div className="total-item gk">
-              <span className="name">{config.goalkeeperName}</span>
-              <span className="mins">{Math.floor(elapsedSec / 60)}m {Math.floor(elapsedSec % 60)}s</span>
-            </div>
-          )}
-          {Object.entries(liveTotals)
+          {Object.entries(liveTotals.field)
             .filter(([n]) => !removedPlayers.has(n))
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => (b[1] + (liveTotals.goalkeeper[b[0]] || 0)) - (a[1] + (liveTotals.goalkeeper[a[0]] || 0)))
             .map(([name, sec]) => (
               <div className="total-item" key={name}>
                 <span className="name">{name}{removedPlayers.has(name) ? ' (out)' : ''}</span>
-                <span className="mins">{Math.floor(sec / 60)}m {Math.floor(sec % 60)}s</span>
+                <span className="mins">
+                  {Math.floor(sec / 60)}m {Math.floor(sec % 60)}s
+                  {liveTotals.goalkeeper[name] ? ` · ${Math.floor(liveTotals.goalkeeper[name] / 60)}m ${Math.floor(liveTotals.goalkeeper[name] % 60)}s GK` : ''}
+                </span>
               </div>
             ))}
         </div>
@@ -1745,16 +1995,13 @@ function GameScreen({ config, initialRotation, onExit }) {
   );
 }
 
-// Helper: get the players who participate in field rotation (excluding GK)
+// Helper: get the players who participate in field rotation.
 function getRotationPlayers(config) {
-  if (config.hasGoalkeeper && config.goalkeeperName) {
-    return config.players.filter(p => p !== config.goalkeeperName);
-  }
   return [...config.players];
 }
 
 // Replan rotation from a given stint, given new on-field/off-field state
-function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRotationPlayers, totalStints }) {
+function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRotationPlayers, goalkeeperSchedule = [], totalStints }) {
   // Keep stints [0..fromIdx-1] as is
   const past = rotation.stints.slice(0, fromIdx).map(s => ({ ...s, onField: [...s.onField], offField: [...s.offField], subOut: [...s.subOut], subIn: [...s.subIn] }));
 
@@ -1773,6 +2020,22 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
     });
   });
 
+  const currentGoalkeeper = goalkeeperSchedule[fromIdx] || rotation.stints[fromIdx]?.goalkeeper || null;
+  const previousGoalkeeper = fromIdx > 0 ? (goalkeeperSchedule[fromIdx - 1] || rotation.stints[fromIdx - 1]?.goalkeeper || null) : null;
+  const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== currentGoalkeeper
+    ? previousGoalkeeper
+    : null;
+  if (currentGoalkeeper) {
+    newOnField = newOnField.filter(p => p !== currentGoalkeeper);
+    newOffField = newOffField.filter(p => p !== currentGoalkeeper);
+  }
+  if (restingGoalkeeper) {
+    newOnField = newOnField.filter(p => p !== restingGoalkeeper);
+    newOffField = newOffField.includes(restingGoalkeeper)
+      ? newOffField
+      : [...newOffField, restingGoalkeeper];
+  }
+
   // Current stint (fromIdx): use newOnField/newOffField
   // Update subOut/subIn for THIS stint relative to previous on-field
   const prevOnField = fromIdx > 0 ? past[fromIdx - 1].onField : [];
@@ -1784,6 +2047,7 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
 
   const newStints = [...past, {
     idx: fromIdx,
+    goalkeeper: currentGoalkeeper,
     onField: [...newOnField].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
     offField: [...newOffField].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
     subOut,
@@ -1795,16 +2059,26 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
   let bench = [...newOffField];
 
   for (let s = fromIdx + 1; s < totalStints; s++) {
-    const N = onField.length + bench.length;
+    const goalkeeper = goalkeeperSchedule[s] || rotation.stints[s]?.goalkeeper || null;
+    const previousGoalkeeper = goalkeeperSchedule[s - 1] || rotation.stints[s - 1]?.goalkeeper || null;
+    const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== goalkeeper
+      ? previousGoalkeeper
+      : null;
+    const eligible = allRotationPlayers.filter(p => p !== goalkeeper && p !== restingGoalkeeper);
+    onField = onField.filter(p => eligible.includes(p));
+    bench = eligible.filter(p => !onField.includes(p));
+
+    const N = eligible.length;
     if (N === 0 || K === 0) break;
-    const effectiveK = Math.min(K, onField.length); // cap to avoid bench < required
+    const effectiveK = Math.min(K, N);
 
     if (N <= effectiveK || bench.length === 0) {
       // Everyone always on
       newStints.push({
         idx: s,
+        goalkeeper,
         onField: [...onField].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-        offField: [...bench].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
+        offField: [...bench, ...(restingGoalkeeper ? [restingGoalkeeper] : [])].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
         subOut: [],
         subIn: [],
       });
@@ -1832,12 +2106,13 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
     const stayingBench = benchSorted.slice(numSubs);
 
     const newOn = [...anchors, ...comingOn];
-    const newOff = [...stayingBench, ...goingOff];
+    const newOff = [...stayingBench, ...goingOff, ...(restingGoalkeeper ? [restingGoalkeeper] : [])];
 
     newOn.forEach(p => { if (stintsPlayed[p] !== undefined) stintsPlayed[p]++; });
 
     newStints.push({
       idx: s,
+      goalkeeper,
       onField: [...newOn].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
       offField: [...newOff].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
       subOut: goingOff,
@@ -1862,6 +2137,8 @@ function App() {
     numOnField: 4,
     hasGoalkeeper: false,
     goalkeeperName: '',
+    goalkeeperNames: [],
+    goalkeeperBlockStints: 2,
     players: [],
     startersMode: 'random',
     chosenStarters: [],
@@ -1880,6 +2157,8 @@ function App() {
           numOnField: saved.numOnField ?? 4,
           hasGoalkeeper: saved.hasGoalkeeper ?? false,
           goalkeeperName: saved.goalkeeperName ?? '',
+          goalkeeperNames: saved.goalkeeperNames ?? (saved.players ?? []),
+          goalkeeperBlockStints: saved.goalkeeperBlockStints ?? 2,
           players: saved.players ?? [],
           startersMode: saved.startersMode ?? 'random',
           chosenStarters: saved.chosenStarters ?? [],
@@ -1912,7 +2191,8 @@ function App() {
       orderedPlayers = shuffle(rotPlayers);
     }
 
-    const r = computeRotation(orderedPlayers, fieldK, numStints);
+    const goalkeeperSchedule = getGoalkeeperSchedule(config, numStints, validChosen);
+    const r = computeRotationWithGoalkeepers(orderedPlayers, fieldK, numStints, goalkeeperSchedule);
     setRotation(r);
     setPhase('preview');
   };
@@ -1943,7 +2223,7 @@ function App() {
       )}
       {phase === 'game' && rotation && (
         <GameScreen
-          key={`${phase}-${config.gameLength}-${config.stintLength}`}
+          key={`${phase}-${config.gameLength}-${config.stintLength}-${config.goalkeeperBlockStints}`}
           config={config}
           initialRotation={rotation}
           onExit={() => setPhase('setup')}

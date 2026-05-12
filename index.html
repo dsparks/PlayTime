@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d1117">
-<title>Rotation — Youth Soccer Coach</title>
+<title>PlayTime</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -300,10 +300,16 @@
     border-color: var(--green);
     color: var(--green-2);
   }
+  .starter-chip.gk-eligible.selected {
+    background: var(--amber-bg);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
   .starter-chip.selected::before {
-    content: '★';
+    content: '*';
     color: var(--green);
   }
+  .starter-chip.gk-eligible.selected::before { content: none; }
   .starter-chip.disabled {
     opacity: 0.35;
     cursor: not-allowed;
@@ -366,7 +372,7 @@
     border-color: var(--amber);
     color: var(--amber);
   }
-  .roster-chip .gk-tag {
+  .gk-tag {
     font-size: 9px;
     background: var(--amber);
     color: #1a1100;
@@ -565,6 +571,33 @@
     background: var(--amber);
     left: 50%;
   }
+  .time-scrubber {
+    margin: 10px 0 2px;
+  }
+  .time-scrubber input[type="range"] {
+    width: 100%;
+    accent-color: var(--green);
+  }
+  .time-scrubber-labels {
+    display: flex;
+    justify-content: space-between;
+    color: var(--dim);
+    font-size: 10px;
+    font-family: 'Oswald', sans-serif;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+  .time-jumps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .time-jumps .btn {
+    padding: 7px 8px;
+    font-size: 11px;
+    justify-content: center;
+  }
 
   .game-status {
     display: inline-block;
@@ -688,6 +721,107 @@
   }
   .live-totals .totals-grid { margin-top: 0; }
 
+  .score-panel {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+  }
+  .score-team {
+    min-width: 0;
+  }
+  .score-team .label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+  }
+  .score-team .value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 34px;
+    line-height: 1;
+    color: var(--text);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .score-divider {
+    color: var(--dim);
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
+  }
+  .goal-button {
+    margin-top: 14px;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+  }
+  .goal-picker {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .goal-picker .btn {
+    justify-content: center;
+  }
+  .goal-log {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .goal-log-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    background: var(--bg-3);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .goal-log-item strong { color: var(--text); }
+  .goal-log-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .goal-log-actions .btn {
+    padding: 4px 7px;
+    font-size: 10px;
+  }
+  .recovery-panel,
+  .summary-panel {
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .summary-score {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin: 10px 0 14px;
+  }
+  .summary-score .value {
+    font-family: 'Oswald', sans-serif;
+    font-size: 44px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .summary-score .label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 700;
+  }
+
   /* Toast/banner overlay */
   .banner {
     position: fixed;
@@ -779,9 +913,7 @@
 <script type="text/babel">
 const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
-// ─────────────────────────────────────────────────────────
-// Utility
-// ─────────────────────────────────────────────────────────
+// Formatting helpers
 const fmtTime = (totalSec) => {
   if (totalSec < 0) totalSec = 0;
   const m = Math.floor(totalSec / 60);
@@ -794,7 +926,6 @@ const fmtMinutes = (mins) => {
   return Number.isInteger(mins) ? String(mins) : String(Math.round(mins * 100) / 100);
 };
 
-// Fisher-Yates shuffle (unbiased, unlike Array.sort with random comparator)
 const shuffle = (arr) => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -805,14 +936,9 @@ const shuffle = (arr) => {
 };
 
 const STORAGE_KEY = 'soccer-rotation-v1';
+const LIVE_STORAGE_KEY = 'playtime-live-game-v1';
 
-// ─────────────────────────────────────────────────────────
-// Rotation algorithm
-// ─────────────────────────────────────────────────────────
-// Computes a stint-by-stint plan. Each stint: keep the minimum number of
-// "anchors" needed (= max(0, 2K - N)), rotate everyone else. Anchors are
-// chosen from on-field players with the fewest stints played, breaking ties
-// by who anchored longest ago, then by original input order.
+// Rotation planning
 function computeRotation(playerNames, K, numStints) {
   const N = playerNames.length;
   if (N === 0 || K === 0 || numStints === 0) {
@@ -906,7 +1032,10 @@ function getGoalkeeperSchedule(config, numStints, avoidFirst = []) {
   let keepers = getGoalkeeperPlayers(config);
   if (keepers.length === 0) return Array(numStints).fill(null);
 
-  const firstPreferred = keepers.find(p => !avoidFirst.includes(p));
+  const manualStarter = config.startersMode === 'manual' && config.startingGoalkeeper && keepers.includes(config.startingGoalkeeper)
+    ? config.startingGoalkeeper
+    : null;
+  const firstPreferred = manualStarter || keepers.find(p => !avoidFirst.includes(p));
   if (firstPreferred) {
     keepers = [firstPreferred, ...keepers.filter(p => p !== firstPreferred)];
   }
@@ -997,9 +1126,7 @@ function computeRotationWithGoalkeepers(playerNames, K, numStints, goalkeeperSch
   return { stints, totalsByPlayer: totals, goalkeeperTotals };
 }
 
-// ─────────────────────────────────────────────────────────
-// Audio (Web Audio API chimes)
-// ─────────────────────────────────────────────────────────
+// Audio chimes
 function makeChimer() {
   let ctx = null;
   const ensure = () => {
@@ -1052,9 +1179,7 @@ function makeChimer() {
   };
 }
 
-// ─────────────────────────────────────────────────────────
-// Setup screen
-// ─────────────────────────────────────────────────────────
+// Setup
 function SetupScreen({ config, setConfig, onGenerate }) {
   const [newName, setNewName] = useState('');
   const inputRef = useRef(null);
@@ -1078,6 +1203,7 @@ function SetupScreen({ config, setConfig, onGenerate }) {
       players: config.players.filter(p => p !== name),
       goalkeeperName: config.goalkeeperName === name ? '' : config.goalkeeperName,
       goalkeeperNames: (config.goalkeeperNames || []).filter(p => p !== name),
+      startingGoalkeeper: config.startingGoalkeeper === name ? '' : config.startingGoalkeeper,
       chosenStarters: config.chosenStarters.filter(p => p !== name),
     });
   };
@@ -1090,23 +1216,32 @@ function SetupScreen({ config, setConfig, onGenerate }) {
       goalkeeperNames: isAllowed
         ? current.filter(p => p !== name)
         : [...current, name],
+      startingGoalkeeper: isAllowed && config.startingGoalkeeper === name ? '' : config.startingGoalkeeper,
     });
   };
 
-  // Number of starters the user needs to pick (excludes the GK if there is one)
   const startersNeeded = config.hasGoalkeeper
     ? Math.max(0, config.numOnField - 1)
     : config.numOnField;
 
   const toggleStarter = (name) => {
+    if (name === config.startingGoalkeeper) return;
     const isCurrent = config.chosenStarters.includes(name);
-    const validChosenCount = config.chosenStarters.filter(p => config.players.includes(p)).length;
+    const validChosenCount = config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper).length;
     if (isCurrent) {
       setConfig({ ...config, chosenStarters: config.chosenStarters.filter(p => p !== name) });
     } else {
       if (validChosenCount >= startersNeeded) return;
       setConfig({ ...config, chosenStarters: [...config.chosenStarters, name] });
     }
+  };
+
+  const setStartingGoalkeeper = (name) => {
+    setConfig({
+      ...config,
+      startingGoalkeeper: name,
+      chosenStarters: config.chosenStarters.filter(p => p !== name),
+    });
   };
 
   const setStartersMode = (mode) => {
@@ -1133,14 +1268,17 @@ function SetupScreen({ config, setConfig, onGenerate }) {
 
     if (config.hasGoalkeeper) {
       if (goalkeeperPlayers.length === 0) errors.push('Allow at least one goalkeeper');
-      if (config.numOnField < 2) errors.push('Need ≥2 on field if there is a GK');
+      if (config.numOnField < 2) errors.push('Need >=2 on field if there is a GK');
       if ((config.goalkeeperBlockStints || 0) < 1) errors.push('GK block length must be at least 1 stint');
     }
     if (rotationPlayers < fieldRotation && config.players.length > 0) {
       errors.push(`Need at least ${minPlayers} players for ${config.numOnField} on field${needsKeeperRestSpot ? ' with a resting outgoing GK' : (config.hasGoalkeeper ? ' (incl. GK)' : '')}`);
     }
     if (config.startersMode === 'manual' && rotationPlayers >= fieldRotation && config.players.length > 0) {
-      const validChosen = config.chosenStarters.filter(p => config.players.includes(p));
+      const validChosen = config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper);
+      if (config.hasGoalkeeper && !goalkeeperPlayers.includes(config.startingGoalkeeper)) {
+        errors.push('Choose a starting goalkeeper');
+      }
       if (validChosen.length !== startersNeeded) {
         errors.push(`Choose exactly ${startersNeeded} starter${startersNeeded === 1 ? '' : 's'} (${validChosen.length}/${startersNeeded} picked)`);
       }
@@ -1186,53 +1324,6 @@ function SetupScreen({ config, setConfig, onGenerate }) {
           </div>
         </div>
 
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={config.hasGoalkeeper}
-            onChange={e => setConfig({
-              ...config,
-              hasGoalkeeper: e.target.checked,
-              goalkeeperNames: (config.goalkeeperNames || []).length > 0 ? config.goalkeeperNames : config.players,
-            })}
-          />
-          <span className="toggle-track" />
-          <span className="toggle-label">Rotate goalkeepers</span>
-        </label>
-        {config.hasGoalkeeper && (
-          <div>
-            <div className="help-note">
-              Goalkeepers rotate in contiguous blocks. Field rotation uses
-              {' '}{Math.max(0, config.numOnField - 1)} field positions while the current keeper is in goal.
-            </div>
-            <div className="field" style={{ marginTop: 10, maxWidth: 180 }}>
-              <label>GK block (stints)</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                min="1"
-                value={config.goalkeeperBlockStints}
-                onChange={e => setConfig({ ...config, goalkeeperBlockStints: parseInt(e.target.value, 10) || 1 })}
-              />
-            </div>
-            <div className="starter-list" style={{ marginTop: 10 }}>
-              {config.players.map(p => {
-                const isAllowed = (config.goalkeeperNames || config.players).includes(p);
-                return (
-                  <span
-                    key={p}
-                    className={`starter-chip ${isAllowed ? 'selected' : ''}`}
-                    onClick={() => toggleGoalkeeperAllowed(p)}
-                    title={isAllowed ? 'Remove from goalkeeper rotation' : 'Add to goalkeeper rotation'}
-                  >
-                    {p}
-                    {isAllowed && <button onClick={(e) => { e.stopPropagation(); toggleGoalkeeperAllowed(p); }} aria-label={`Remove ${p} from goalkeeper rotation`}>×</button>}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="section">
@@ -1250,20 +1341,76 @@ function SetupScreen({ config, setConfig, onGenerate }) {
         </div>
         <div className="roster-list">
           {config.players.map(p => {
-            const isGK = config.hasGoalkeeper && (config.goalkeeperNames || config.players).includes(p);
             return (
               <span
                 key={p}
-                className={`roster-chip ${isGK ? 'gk' : ''}`}
+                className="roster-chip"
               >
-                {isGK && <span className="gk-tag">GK</span>}
                 {p}
-                <button onClick={(e) => { e.stopPropagation(); removePlayer(p); }} aria-label={`Remove ${p}`}>×</button>
+                <button onClick={(e) => { e.stopPropagation(); removePlayer(p); }} aria-label={`Remove ${p} from roster`} title="Remove from roster">x</button>
               </span>
             );
           })}
         </div>
       </div>
+
+      <div className="section">
+        <label className="toggle">
+          <input
+            type="checkbox"
+            checked={config.hasGoalkeeper}
+            onChange={e => setConfig({
+              ...config,
+              hasGoalkeeper: e.target.checked,
+              goalkeeperNames: (config.goalkeeperNames || []).length > 0 ? config.goalkeeperNames : config.players,
+            })}
+          />
+          <span className="toggle-track" />
+          <span className="toggle-label">Include a goalkeeper</span>
+        </label>
+        {config.hasGoalkeeper && (
+          <div>
+            <div className="help-note">
+              Goalkeepers rotate in contiguous blocks. Field rotation uses
+              {' '}{Math.max(0, config.numOnField - 1)} field positions while the current keeper is in goal.
+            </div>
+            <div className="field" style={{ marginTop: 10, maxWidth: 180 }}>
+              <label>GK block (stints)</label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={config.goalkeeperBlockStints}
+                onChange={e => setConfig({ ...config, goalkeeperBlockStints: parseInt(e.target.value, 10) || 1 })}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {config.hasGoalkeeper && (
+        <div className="section">
+          <div className="section-title">Eligible Goalkeepers</div>
+          <div className="starter-list">
+              {config.players.map(p => {
+                const isAllowed = (config.goalkeeperNames || config.players).includes(p);
+                return (
+                  <span
+                    key={p}
+                    className={`starter-chip gk-eligible ${isAllowed ? 'selected' : ''}`}
+                    onClick={() => toggleGoalkeeperAllowed(p)}
+                    title={isAllowed ? 'Remove from goalkeeper rotation' : 'Add to goalkeeper rotation'}
+                  >
+                    {isAllowed && <span className="gk-tag">GK</span>}
+                    {p}
+                    {isAllowed && <button onClick={(e) => { e.stopPropagation(); toggleGoalkeeperAllowed(p); }} aria-label={`Remove ${p} from goalkeeper rotation`}>x</button>}
+                  </span>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
 
       {config.players.length > 0 && startersNeeded > 0 && (
         <div className="section">
@@ -1287,24 +1434,32 @@ function SetupScreen({ config, setConfig, onGenerate }) {
               />
               Choose
               {config.startersMode === 'manual' && (
-                <span className="count">{config.chosenStarters.filter(p => config.players.includes(p)).length}/{startersNeeded}</span>
+                <span className="count">
+                  {config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper).length}/{startersNeeded}
+                  {config.hasGoalkeeper && (config.startingGoalkeeper ? ' + GK' : ' + no GK')}
+                </span>
               )}
             </label>
           </div>
           {config.startersMode === 'manual' && (
             <>
               <div className="help-note">
-                Tap to pick the {startersNeeded} {startersNeeded === 1 ? 'player' : 'players'} who'll start on the field.
-                {config.hasGoalkeeper && <> The first keeper will be chosen from outside that group when possible.</>}
+                {config.hasGoalkeeper
+                  ? <>Choose the starting goalkeeper and the {startersNeeded} {startersNeeded === 1 ? 'field player' : 'field players'} who will start.</>
+                  : <>Tap to pick the {startersNeeded} {startersNeeded === 1 ? 'player' : 'players'} who will start on the field.</>}
               </div>
+              {config.hasGoalkeeper && (
+                <div className="swap-section-label">Starting field players</div>
+              )}
               <div className="starter-list">
                 {config.players.length === 0 && (
                   <span style={{ color: 'var(--dim)', fontSize: 13, fontStyle: 'italic' }}>Add players to the roster first</span>
                 )}
                 {config.players
+                  .filter(p => p !== config.startingGoalkeeper)
                   .map(p => {
                     const isStarter = config.chosenStarters.includes(p);
-                    const isFull = !isStarter && config.chosenStarters.filter(p => config.players.includes(p)).length >= startersNeeded;
+                    const isFull = !isStarter && config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper).length >= startersNeeded;
                     return (
                       <span
                         key={p}
@@ -1316,6 +1471,26 @@ function SetupScreen({ config, setConfig, onGenerate }) {
                     );
                   })}
               </div>
+              {config.hasGoalkeeper && (
+                <>
+                  <div className="swap-section-label" style={{ marginTop: 10 }}>Starting goalkeeper</div>
+                  <div className="starter-list">
+                    {getGoalkeeperPlayers(config).map(p => {
+                      const isStartingGk = config.startingGoalkeeper === p;
+                      return (
+                        <span
+                          key={p}
+                          className={`starter-chip gk-eligible ${isStartingGk ? 'selected' : ''}`}
+                          onClick={() => setStartingGoalkeeper(p)}
+                        >
+                          <span className="gk-tag">GK</span>
+                          {p}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
@@ -1323,7 +1498,7 @@ function SetupScreen({ config, setConfig, onGenerate }) {
 
       {validation.length > 0 && (
         <div className="help-note" style={{ borderLeftColor: 'var(--amber)', color: 'var(--amber)' }}>
-          {validation.map((e, i) => <div key={i}>• {e}</div>)}
+          {validation.map((e, i) => <div key={i}>* {e}</div>)}
         </div>
       )}
 
@@ -1332,15 +1507,13 @@ function SetupScreen({ config, setConfig, onGenerate }) {
         onClick={onGenerate}
         disabled={validation.length > 0}
       >
-        Generate Rotation →
+        Generate Rotation ->
       </button>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// Preview screen
-// ─────────────────────────────────────────────────────────
+// Preview
 function PreviewScreen({ config, rotation, onStart, onBack }) {
   const stintLengthSec = config.stintLength * 60;
   const halftimeSec = (config.gameLength * 60) / 2;
@@ -1350,10 +1523,10 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
       <div className="section">
         <div className="section-title">Rotation Plan</div>
         <div className="help-note">
-          {rotation.stints.length} stints of {fmtMinutes(config.stintLength)} min ·
-          {' '}{config.players.length} players ·
+          {rotation.stints.length} stints of {fmtMinutes(config.stintLength)} min |
+          {' '}{config.players.length} players |
           {' '}{config.numOnField} on field
-          {config.hasGoalkeeper && <> · GK block: <strong>{config.goalkeeperBlockStints}</strong> stint{config.goalkeeperBlockStints === 1 ? '' : 's'}</>}
+          {config.hasGoalkeeper && <> | GK block: <strong>{config.goalkeeperBlockStints}</strong> stint{config.goalkeeperBlockStints === 1 ? '' : 's'}</>}
         </div>
 
         <div className="rot-table">
@@ -1367,7 +1540,7 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
                   <div className="rot-stint-num">STINT {i + 1}</div>
                   {fmtTime(startSec)}
                   <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 400 }}>
-                    – {fmtTime(endSec)}{isHalftime && ' ★'}
+                    - {fmtTime(endSec)}{isHalftime && ' HT'}
                   </div>
                 </div>
                 <div className="rot-stint-content">
@@ -1381,9 +1554,9 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
                   </div>
                   {s.subOut.length > 0 && (
                     <div className="rot-subs">
-                      <span className="out">↓ {s.subOut.join(', ')}</span>
-                      <span className="arrow">·</span>
-                      <span className="in">↑ {s.subIn.join(', ')}</span>
+                      <span className="out">OUT: {s.subOut.join(', ')}</span>
+                      <span className="arrow">|</span>
+                      <span className="in">IN: {s.subIn.join(', ')}</span>
                     </div>
                   )}
                   {i === 0 && <div className="rot-subs"><span style={{ color: 'var(--dim)' }}>Starting lineup</span></div>}
@@ -1404,7 +1577,7 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
                 <span className="name">{name}</span>
                 <span className="mins">
                   {fmtMinutes(n * config.stintLength)}m
-                  {rotation.goalkeeperTotals?.[name] ? ` · ${fmtMinutes(rotation.goalkeeperTotals[name] * config.stintLength)}m GK` : ''}
+                  {rotation.goalkeeperTotals?.[name] ? ` | ${fmtMinutes(rotation.goalkeeperTotals[name] * config.stintLength)}m GK` : ''}
                 </span>
               </div>
             ))}
@@ -1415,17 +1588,15 @@ function PreviewScreen({ config, rotation, onStart, onBack }) {
       </div>
 
       <div className="btn-row" style={{ marginTop: 16 }}>
-        <button className="btn ghost" onClick={onBack}>← Edit</button>
-        <button className="btn primary large" onClick={onStart}>Start Game ▶</button>
+        <button className="btn ghost" onClick={onBack}>Edit</button>
+        <button className="btn primary large" onClick={onStart}>Start Game</button>
       </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────
-// Game screen
-// ─────────────────────────────────────────────────────────
-function GameScreen({ config, initialRotation, onExit }) {
+// Live game
+function GameScreen({ config, initialRotation, initialLive, onExit }) {
   const stintLengthSec = config.stintLength * 60;
   const gameLengthSec = config.gameLength * 60;
   const halftimeSec = gameLengthSec / 2;
@@ -1459,25 +1630,20 @@ function GameScreen({ config, initialRotation, onExit }) {
     };
   }, [config]);
 
-  // Live rotation (mutable when manual subs/roster changes happen)
-  const [rotation, setRotation] = useState(() => withGoalkeeperFallback(initialRotation));
+  const [rotation, setRotation] = useState(() => initialLive?.rotation || withGoalkeeperFallback(initialRotation));
 
-  // Timer state
   const [running, setRunning] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(0);
+  const [elapsedMs, setElapsedMs] = useState(initialLive?.elapsedMs || 0);
   const startTimestampRef = useRef(null);
   const accumulatedPausedMsRef = useRef(0);
   const pauseStartedAtRef = useRef(null);
 
-  // Chime tracking
   const chimerRef = useRef(null);
   const firedChimesRef = useRef(new Set());
   if (!chimerRef.current) chimerRef.current = makeChimer();
 
-  // Banners
   const [banner, setBanner] = useState(null); // 'halftime' | 'fulltime' | null
 
-  // Wake lock
   const wakeLockRef = useRef(null);
   const acquireWakeLock = useCallback(async () => {
     try {
@@ -1498,16 +1664,65 @@ function GameScreen({ config, initialRotation, onExit }) {
     return () => document.removeEventListener('visibilitychange', onVis);
   }, [running, acquireWakeLock]);
 
-  // Tick
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => {
       const now = Date.now();
       const elapsed = now - startTimestampRef.current - accumulatedPausedMsRef.current;
-      setElapsedMs(elapsed);
+      setElapsedMs(Math.min(elapsed, gameLengthSec * 1000));
     }, 100);
     return () => clearInterval(id);
-  }, [running]);
+  }, [running, gameLengthSec]);
+
+  const getFiredChimesThrough = (targetSec) => {
+    const fired = new Set();
+    const warnTime = halftimeSec - 60;
+    if (warnTime > 0 && targetSec >= warnTime) fired.add('halftime-warning');
+    if (targetSec >= halftimeSec) {
+      fired.add('halftime');
+      const stintBoundary = Math.round(halftimeSec / stintLengthSec) * stintLengthSec;
+      if (Math.abs(stintBoundary - halftimeSec) < 0.5) {
+        fired.add(`stint-end-${Math.round(halftimeSec / stintLengthSec)}`);
+      }
+    }
+    for (let k = 1; k < rotation.stints.length; k++) {
+      const t = k * stintLengthSec;
+      if (targetSec >= t) fired.add(`stint-end-${k}`);
+    }
+    if (targetSec >= gameLengthSec) fired.add('fulltime');
+    return fired;
+  };
+
+  const setGameTime = (nextMs, shouldPause = true) => {
+    const clampedMs = Math.max(0, Math.min(nextMs, gameLengthSec * 1000));
+    if (shouldPause) {
+      setRunning(false);
+      releaseWakeLock();
+      startTimestampRef.current = null;
+      accumulatedPausedMsRef.current = 0;
+      pauseStartedAtRef.current = null;
+    } else if (running) {
+      startTimestampRef.current = Date.now() - clampedMs;
+      accumulatedPausedMsRef.current = 0;
+      pauseStartedAtRef.current = null;
+    }
+    setElapsedMs(clampedMs);
+    firedChimesRef.current = getFiredChimesThrough(clampedMs / 1000);
+    setBanner(null);
+  };
+
+  const handleScrub = (e) => {
+    setGameTime(parseInt(e.target.value, 10) * 1000, true);
+  };
+
+  const adjustGameTime = (deltaSec) => {
+    setGameTime(elapsedMs + deltaSec * 1000, true);
+  };
+
+  const jumpToStint = (delta) => {
+    const targetIdx = Math.max(0, Math.min(rotation.stints.length - 1, currentStintIdx + delta));
+    setGameTime(targetIdx * stintLengthSec * 1000, true);
+  };
 
   const elapsedSec = elapsedMs / 1000;
   const isFullTime = elapsedSec >= gameLengthSec;
@@ -1521,23 +1736,52 @@ function GameScreen({ config, initialRotation, onExit }) {
   const nextStint = rotation.stints[currentStintIdx + 1] || null;
   const totalRemainSec = Math.max(0, gameLengthSec - elapsedSec);
 
-  // Chime detection
+  const [swapMode, setSwapMode] = useState(false);
+  const [swapSelected, setSwapSelected] = useState(null); // { name, role }
+  const [rosterOpen, setRosterOpen] = useState(false);
+  const [newRosterName, setNewRosterName] = useState('');
+  const [newRosterGkAllowed, setNewRosterGkAllowed] = useState(false);
+  const [newRosterMode, setNewRosterMode] = useState('bench');
+  const [extraPlayers, setExtraPlayers] = useState(initialLive?.extraPlayers || []); // added mid-game
+  const [extraGoalkeepers, setExtraGoalkeepers] = useState(initialLive?.extraGoalkeepers || []);
+  const [removedPlayers, setRemovedPlayers] = useState(new Set(initialLive?.removedPlayers || []));
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [editingGoalId, setEditingGoalId] = useState(null);
+  const [goalEvents, setGoalEvents] = useState(initialLive?.goalEvents || []);
+
+  const saveLiveSnapshot = useCallback(() => {
+    const hasLiveActivity = elapsedMs > 0 || extraPlayers.length > 0 || removedPlayers.size > 0 || goalEvents.length > 0;
+    try {
+      if (!hasLiveActivity) {
+        localStorage.removeItem(LIVE_STORAGE_KEY);
+        return;
+      }
+      localStorage.setItem(LIVE_STORAGE_KEY, JSON.stringify({
+        config,
+        rotation,
+        elapsedMs,
+        extraPlayers,
+        extraGoalkeepers,
+        removedPlayers: [...removedPlayers],
+        goalEvents,
+        savedAt: Date.now(),
+      }));
+    } catch (e) { /* ignore */ }
+  }, [config, rotation, elapsedMs, extraPlayers, extraGoalkeepers, removedPlayers, goalEvents]);
+
   useEffect(() => {
     if (!running) return;
     const fired = firedChimesRef.current;
     const c = chimerRef.current;
 
-    // Halftime warning at gameLength/2 - 60s
     const warnTime = halftimeSec - 60;
     if (warnTime > 0 && elapsedSec >= warnTime && !fired.has('halftime-warning')) {
       fired.add('halftime-warning');
       c.halftimeWarning();
     }
 
-    // Halftime
     if (elapsedSec >= halftimeSec && !fired.has('halftime')) {
       fired.add('halftime');
-      // Suppress stint chime if it's also a stint boundary
       const stintBoundary = Math.round(halftimeSec / stintLengthSec) * stintLengthSec;
       if (Math.abs(stintBoundary - halftimeSec) < 0.5) fired.add(`stint-end-${Math.round(halftimeSec / stintLengthSec)}`);
       c.halftime();
@@ -1545,18 +1789,15 @@ function GameScreen({ config, initialRotation, onExit }) {
       setTimeout(() => setBanner(b => b === 'halftime' ? null : b), 4000);
     }
 
-    // Stint end chimes (at every stintLength * k for k in 1..numStints-1, except last)
     for (let k = 1; k < rotation.stints.length; k++) {
       const t = k * stintLengthSec;
       const key = `stint-end-${k}`;
       if (elapsedSec >= t && !fired.has(key)) {
         fired.add(key);
-        // Don't double-fire halftime
         if (Math.abs(t - halftimeSec) > 0.5) c.stintEnd();
       }
     }
 
-    // Full time
     if (elapsedSec >= gameLengthSec && !fired.has('fulltime')) {
       fired.add('fulltime');
       c.fullTime();
@@ -1566,11 +1807,19 @@ function GameScreen({ config, initialRotation, onExit }) {
     }
   }, [elapsedSec, running, halftimeSec, gameLengthSec, stintLengthSec, rotation.stints.length, releaseWakeLock]);
 
+  useEffect(() => {
+    const id = setTimeout(() => {
+      saveLiveSnapshot();
+    }, 300);
+    return () => clearTimeout(id);
+  }, [saveLiveSnapshot]);
+
   const handleStart = () => {
     if (running) return;
     chimerRef.current.unlock();
     if (startTimestampRef.current === null) {
-      startTimestampRef.current = Date.now();
+      startTimestampRef.current = Date.now() - elapsedMs;
+      accumulatedPausedMsRef.current = 0;
     } else if (pauseStartedAtRef.current !== null) {
       accumulatedPausedMsRef.current += Date.now() - pauseStartedAtRef.current;
       pauseStartedAtRef.current = null;
@@ -1588,19 +1837,16 @@ function GameScreen({ config, initialRotation, onExit }) {
 
   const handleReset = () => {
     if (!confirm('Reset the clock to 0:00? Substitutions and roster changes will be kept.')) return;
-    setRunning(false);
-    startTimestampRef.current = null;
-    accumulatedPausedMsRef.current = 0;
-    pauseStartedAtRef.current = null;
-    setElapsedMs(0);
-    firedChimesRef.current = new Set();
-    setBanner(null);
-    releaseWakeLock();
+    setGameTime(0, true);
   };
 
-  // ───── Manual sub mode ─────
-  const [swapMode, setSwapMode] = useState(false);
-  const [swapSelected, setSwapSelected] = useState(null); // { name, role }
+  const handleExit = () => {
+    const hasGameProgress = elapsedSec > 0 || goalEvents.length > 0 || extraPlayers.length > 0 || removedPlayers.size > 0;
+    if (hasGameProgress && !confirm('Go back to setup? This live game will be saved so you can resume it.')) return;
+    saveLiveSnapshot();
+    onExit();
+  };
+
   const startSwap = () => {
     setSwapMode(true);
     setSwapSelected(null);
@@ -1619,7 +1865,6 @@ function GameScreen({ config, initialRotation, onExit }) {
       return;
     }
     if (swapSelected.role === role) {
-      // re-select
       setSwapSelected({ name, role });
       return;
     }
@@ -1651,14 +1896,12 @@ function GameScreen({ config, initialRotation, onExit }) {
         newOffField = currentStint.offField.map(p => p === benchPick.name ? oldGoalkeeper : p).filter(Boolean);
       }
     } else {
-      // perform field/bench swap: replan from currentStintIdx with new on-field set
       const onFieldName = fieldPick.name;
       const offFieldName = benchPick.name;
       newOnField = currentStint.onField.map(p => p === onFieldName ? offFieldName : p);
       newOffField = currentStint.offField.map(p => p === offFieldName ? onFieldName : p);
     }
 
-    // Replan future stints
     const newRotation = replanFromStint({
       rotation,
       fromIdx: currentStintIdx,
@@ -1674,56 +1917,108 @@ function GameScreen({ config, initialRotation, onExit }) {
     setSwapSelected(null);
   };
 
-  // ───── Roster mid-game changes ─────
-  const [rosterOpen, setRosterOpen] = useState(false);
-  const [newRosterName, setNewRosterName] = useState('');
-  const [extraPlayers, setExtraPlayers] = useState([]); // added mid-game
-  const [removedPlayers, setRemovedPlayers] = useState(new Set());
-
   const addRosterPlayer = () => {
     const trimmed = newRosterName.trim();
     if (!trimmed) return;
     const allCurrent = [...config.players, ...extraPlayers];
     if (allCurrent.some(p => p.toLowerCase() === trimmed.toLowerCase())) return;
-    setExtraPlayers([...extraPlayers, trimmed]);
-    // Add to bench of current stint and replan
-    const newOffField = [...currentStint.offField, trimmed];
+    const nextExtraPlayers = [...extraPlayers, trimmed];
+    const nextExtraGoalkeepers = newRosterGkAllowed ? [...extraGoalkeepers, trimmed] : extraGoalkeepers;
+    setExtraPlayers(nextExtraPlayers);
+    setExtraGoalkeepers(nextExtraGoalkeepers);
+
+    const fieldK = config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField;
+    let newOnField = [...currentStint.onField];
+    let newOffField = [...currentStint.offField, trimmed];
+    if (newRosterMode === 'now' && fieldK > 0) {
+      if (newOnField.length < fieldK) {
+        newOnField = [...newOnField, trimmed];
+        newOffField = newOffField.filter(p => p !== trimmed);
+      } else if (newOnField.length > 0) {
+        const restingNow = newOnField[0];
+        newOnField = [trimmed, ...newOnField.slice(1)];
+        newOffField = [restingNow, ...newOffField.filter(p => p !== trimmed)];
+      }
+    }
+    const goalkeeperSchedule = newRosterGkAllowed
+      ? rebuildGoalkeeperSchedule([...getRotationPlayers(config), ...nextExtraPlayers].filter(p => !removedPlayers.has(p)), null, nextExtraGoalkeepers)
+      : rotation.stints.map(s => s.goalkeeper || null);
     const newRotation = replanFromStint({
       rotation,
       fromIdx: currentStintIdx,
-      newOnField: currentStint.onField,
+      newOnField,
       newOffField,
-      K: config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField,
-      allRotationPlayers: [...getRotationPlayers(config), ...extraPlayers, trimmed].filter(p => !removedPlayers.has(p)),
-      goalkeeperSchedule: rotation.stints.map(s => s.goalkeeper || null),
+      K: fieldK,
+      allRotationPlayers: [...getRotationPlayers(config), ...nextExtraPlayers].filter(p => !removedPlayers.has(p)),
+      goalkeeperSchedule,
       totalStints: rotation.stints.length,
     });
     setRotation(newRotation);
     setNewRosterName('');
+    setNewRosterGkAllowed(false);
+    setNewRosterMode('bench');
+  };
+
+  const rebuildGoalkeeperSchedule = (remainingPlayers, currentGoalkeeperOverride = null, goalkeeperOverride = extraGoalkeepers) => {
+    const schedule = rotation.stints.map(s => s.goalkeeper || null);
+    if (!config.hasGoalkeeper) return schedule;
+
+    const eligibleKeepers = Array.from(new Set([...(config.goalkeeperNames || config.players), ...goalkeeperOverride]))
+      .filter(p => remainingPlayers.includes(p));
+    const currentGoalkeeper = currentGoalkeeperOverride || currentStint.goalkeeper;
+    const keepers = currentGoalkeeper && remainingPlayers.includes(currentGoalkeeper)
+      ? [currentGoalkeeper, ...eligibleKeepers.filter(p => p !== currentGoalkeeper)]
+      : eligibleKeepers;
+
+    if (keepers.length === 0) return schedule.map((gk, i) => i < currentStintIdx ? gk : null);
+
+    const blockStints = Math.max(1, parseInt(config.goalkeeperBlockStints, 10) || 1);
+    for (let i = currentStintIdx; i < schedule.length; i++) {
+      schedule[i] = keepers[Math.floor((i - currentStintIdx) / blockStints) % keepers.length];
+    }
+    return schedule;
   };
 
   const removeRosterPlayer = (name) => {
-    if (config.hasGoalkeeper && rotation.stints.some((s, i) => i >= currentStintIdx && s.goalkeeper === name)) {
-      alert(`${name} is scheduled for goalkeeper duty. Edit setup to change the GK rotation.`);
-      return;
-    }
     if (!confirm(`Remove ${name} from the rest of the game?`)) return;
     const newRemoved = new Set(removedPlayers);
     newRemoved.add(name);
     setRemovedPlayers(newRemoved);
 
-    // If on-field, need to swap in someone from bench first
     let newOnField = currentStint.onField.filter(p => p !== name);
     let newOffField = currentStint.offField.filter(p => p !== name);
+    const remainingPlayers = [...getRotationPlayers(config), ...extraPlayers].filter(p => !newRemoved.has(p));
+    let replacementGoalkeeper = null;
+
+    if (config.hasGoalkeeper && currentStint.goalkeeper === name) {
+      replacementGoalkeeper = newOffField.find(p => remainingPlayers.includes(p))
+        || newOnField.find(p => remainingPlayers.includes(p))
+        || null;
+      if (!replacementGoalkeeper) {
+        alert('No available player can replace the current goalkeeper.');
+        newRemoved.delete(name);
+        setRemovedPlayers(new Set(removedPlayers));
+        return;
+      }
+      newOffField = newOffField.filter(p => p !== replacementGoalkeeper);
+      if (newOnField.includes(replacementGoalkeeper)) {
+        newOnField = newOnField.filter(p => p !== replacementGoalkeeper);
+        if (newOffField.length > 0) {
+          const filler = newOffField[0];
+          newOnField = [...newOnField, filler];
+          newOffField = newOffField.slice(1);
+        }
+      }
+    }
+
     if (currentStint.onField.includes(name)) {
-      // Pull someone from bench
       if (newOffField.length > 0) {
         const filler = newOffField[0];
         newOnField = [...newOnField, filler];
         newOffField = newOffField.slice(1);
       }
     }
-    const remainingPlayers = [...getRotationPlayers(config), ...extraPlayers].filter(p => !newRemoved.has(p));
+    const goalkeeperSchedule = rebuildGoalkeeperSchedule(remainingPlayers, replacementGoalkeeper);
     const newRotation = replanFromStint({
       rotation,
       fromIdx: currentStintIdx,
@@ -1731,13 +2026,12 @@ function GameScreen({ config, initialRotation, onExit }) {
       newOffField,
       K: Math.min(newOnField.length, config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField),
       allRotationPlayers: remainingPlayers,
-      goalkeeperSchedule: rotation.stints.map(s => s.goalkeeper || null),
+      goalkeeperSchedule,
       totalStints: rotation.stints.length,
     });
     setRotation(newRotation);
   };
 
-  // ───── Live totals ─────
   const liveTotals = useMemo(() => {
     const totals = {};
     const goalkeeperTotals = {};
@@ -1761,6 +2055,66 @@ function GameScreen({ config, initialRotation, onExit }) {
     return { field: totals, goalkeeper: goalkeeperTotals };
   }, [rotation, elapsedSec, stintLengthSec, config, extraPlayers]);
 
+  const currentScorers = useMemo(() => (
+    Array.from(new Set([currentStint.goalkeeper, ...currentStint.onField].filter(Boolean)))
+  ), [currentStint]);
+
+  const goalPickerScorers = useMemo(() => {
+    const editingGoal = goalEvents.find(goal => goal.id === editingGoalId);
+    return Array.from(new Set([
+      ...currentScorers,
+      ...(editingGoal && editingGoal.team !== 'opponent' ? [editingGoal.scorer] : []),
+    ]));
+  }, [currentScorers, goalEvents, editingGoalId]);
+
+  const goalSummary = useMemo(() => {
+    const byPlayer = {};
+    let opponent = 0;
+    goalEvents.forEach(goal => {
+      if (goal.team === 'opponent') {
+        opponent++;
+      } else {
+        byPlayer[goal.scorer] = (byPlayer[goal.scorer] || 0) + 1;
+      }
+    });
+    const us = Object.values(byPlayer).reduce((sum, n) => sum + n, 0);
+    return { us, opponent, byPlayer };
+  }, [goalEvents]);
+
+  const recordGoal = (scorer) => {
+    const isOpponent = scorer === 'Opponent';
+    if (editingGoalId) {
+      setGoalEvents(events => events.map(goal => (
+        goal.id === editingGoalId
+          ? { ...goal, scorer, team: isOpponent ? 'opponent' : 'us' }
+          : goal
+      )));
+    } else {
+      setGoalEvents(events => [
+        ...events,
+        {
+          id: `${Date.now()}-${events.length}`,
+          scorer,
+          team: isOpponent ? 'opponent' : 'us',
+          timeSec: elapsedSec,
+          stintIdx: currentStintIdx,
+        },
+      ]);
+    }
+    setEditingGoalId(null);
+    setGoalOpen(false);
+  };
+
+  const editGoal = (id) => {
+    setEditingGoalId(id);
+    setGoalOpen(true);
+  };
+
+  const deleteGoal = (id) => {
+    if (!confirm('Delete this goal?')) return;
+    setGoalEvents(events => events.filter(goal => goal.id !== id));
+  };
+
   const clockClass = isFullTime ? 'paused' : (running ? 'running' : 'paused');
   const progressPct = Math.min(100, (elapsedSec / gameLengthSec) * 100);
   const halftimeIsPast = elapsedSec >= halftimeSec;
@@ -1780,7 +2134,7 @@ function GameScreen({ config, initialRotation, onExit }) {
           className={`banner ${banner}`}
           onClick={() => setBanner(null)}
         >
-          {banner === 'halftime' ? '★ HALFTIME ★' : '★ FULL TIME ★'}
+          {banner === 'halftime' ? 'HALFTIME' : 'FULL TIME'}
         </div>
       )}
 
@@ -1790,12 +2144,76 @@ function GameScreen({ config, initialRotation, onExit }) {
         <div className="fill" style={{ width: `${progressPct}%`, background: isFullTime ? 'var(--red)' : (halftimeIsPast ? 'var(--green)' : 'var(--green-2)') }} />
         <div className="halftime-tick" />
       </div>
+      <div className="time-scrubber">
+        <input
+          type="range"
+          min="0"
+          max={Math.floor(gameLengthSec)}
+          step="1"
+          value={Math.min(Math.floor(elapsedSec), Math.floor(gameLengthSec))}
+          onChange={handleScrub}
+          aria-label="Scrub game time"
+        />
+        <div className="time-scrubber-labels">
+          <span>0:00</span>
+          <span>{fmtTime(gameLengthSec)}</span>
+        </div>
+        <div className="time-jumps">
+          <button className="btn ghost" onClick={() => adjustGameTime(-10)}>-10s</button>
+          <button className="btn ghost" onClick={() => adjustGameTime(10)}>+10s</button>
+          <button className="btn ghost" onClick={() => jumpToStint(-1)}>Prev stint</button>
+          <button className="btn ghost" onClick={() => jumpToStint(1)}>Next stint</button>
+        </div>
+      </div>
       <div className="clock-stint">
         <div><span className="label">Stint</span> <span className="val">{currentStintIdx + 1}/{rotation.stints.length}</span></div>
         <div><span className="label">Stint left</span> <span className="val">{fmtTime(stintRemainSec)}</span></div>
         <div><span className="label">Game left</span> <span className="val">{fmtTime(totalRemainSec)}</span></div>
       </div>
       <div className={`game-status ${gameStatusClass}`}>{gameStatus}</div>
+
+      <div className="score-panel">
+        <div className="score-team">
+          <div className="label">Us</div>
+          <div className="value">{goalSummary.us}</div>
+        </div>
+        <div className="score-divider">-</div>
+        <div className="score-team" style={{ textAlign: 'right' }}>
+          <div className="label">Opponent</div>
+          <div className="value">{goalSummary.opponent}</div>
+        </div>
+      </div>
+
+      {isFullTime && (
+        <div className="summary-panel">
+          <div className="section-title" style={{ margin: 0 }}>Post-game Summary</div>
+          <div className="summary-score">
+            <div>
+              <div className="label">Us</div>
+              <div className="value">{goalSummary.us}</div>
+            </div>
+            <div className="score-divider">-</div>
+            <div style={{ textAlign: 'right' }}>
+              <div className="label">Opponent</div>
+              <div className="value">{goalSummary.opponent}</div>
+            </div>
+          </div>
+          <div className="totals-grid">
+            {Object.entries(liveTotals.field)
+              .sort((a, b) => a[0].localeCompare(b[0]))
+              .map(([name, sec]) => (
+                <div className="total-item" key={name}>
+                  <span className="name">{name}</span>
+                  <span className="mins">
+                    {Math.floor(sec / 60)}m {Math.floor(sec % 60)}s
+                    {liveTotals.goalkeeper[name] ? ` | ${Math.floor(liveTotals.goalkeeper[name] / 60)}m ${Math.floor(liveTotals.goalkeeper[name] % 60)}s GK` : ''}
+                    {goalSummary.byPlayer[name] ? ` | ${goalSummary.byPlayer[name]} goal${goalSummary.byPlayer[name] === 1 ? '' : 's'}` : ''}
+                  </span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       {/* On field now */}
       <div className="panel">
@@ -1873,14 +2291,14 @@ function GameScreen({ config, initialRotation, onExit }) {
                   </div>
                 )}
                 <div className="sub-side out">
-                  <div className="label">↓ OUT</div>
+                  <div className="label">OUT</div>
                   <div className="pills">
                     {nextStint.subOut.map(p => <span key={p} className="player-pill off">{p}</span>)}
                   </div>
                 </div>
-                <div className="sub-arrow">→</div>
+                <div className="sub-arrow">-></div>
                 <div className="sub-side in">
-                  <div className="label">↑ IN</div>
+                  <div className="label">IN</div>
                   <div className="pills">
                     {nextStint.subIn.map(p => <span key={p} className="player-pill">{p}</span>)}
                   </div>
@@ -1900,19 +2318,26 @@ function GameScreen({ config, initialRotation, onExit }) {
             )}
           </>
         ) : (
-          <div className="next-sub-empty" style={{ marginTop: 10 }}>Last stint — game ending</div>
+          <div className="next-sub-empty" style={{ marginTop: 10 }}>Last stint - game ending</div>
         )}
       </div>
+
+      <button
+        className="btn primary large full goal-button"
+        onClick={() => { setEditingGoalId(null); setGoalOpen(true); }}
+      >
+        Goal
+      </button>
 
       {/* Controls */}
       <div className="btn-row" style={{ marginTop: 14 }}>
         {!running && !isFullTime && (
           <button className="btn primary large" onClick={handleStart}>
-            {elapsedSec === 0 ? '▶ Start' : '▶ Resume'}
+            {elapsedSec === 0 ? 'Start' : 'Resume'}
           </button>
         )}
         {running && (
-          <button className="btn large" onClick={handlePause}>❚❚ Pause</button>
+          <button className="btn large" onClick={handlePause}>Pause</button>
         )}
         {!swapMode && !isFullTime && (
           <button className="btn" onClick={startSwap}>Manual sub</button>
@@ -1921,7 +2346,7 @@ function GameScreen({ config, initialRotation, onExit }) {
       <div className="small-action-row">
         <button className="btn ghost" onClick={() => setRosterOpen(true)}>Add/Remove player</button>
         <button className="btn ghost" onClick={handleReset}>Reset clock</button>
-        <button className="btn ghost" onClick={onExit}>← Setup</button>
+        <button className="btn ghost" onClick={handleExit}>Setup</button>
       </div>
 
       {/* Live totals */}
@@ -1936,11 +2361,48 @@ function GameScreen({ config, initialRotation, onExit }) {
                 <span className="name">{name}{removedPlayers.has(name) ? ' (out)' : ''}</span>
                 <span className="mins">
                   {Math.floor(sec / 60)}m {Math.floor(sec % 60)}s
-                  {liveTotals.goalkeeper[name] ? ` · ${Math.floor(liveTotals.goalkeeper[name] / 60)}m ${Math.floor(liveTotals.goalkeeper[name] % 60)}s GK` : ''}
+                  {liveTotals.goalkeeper[name] ? ` | ${Math.floor(liveTotals.goalkeeper[name] / 60)}m ${Math.floor(liveTotals.goalkeeper[name] % 60)}s GK` : ''}
                 </span>
               </div>
             ))}
         </div>
+      </div>
+
+      <div className="totals live-totals">
+        <div className="section-title" style={{ margin: 0 }}>Goals</div>
+        <div className="totals-grid">
+          {Object.entries(goalSummary.byPlayer)
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+            .map(([name, total]) => (
+              <div className="total-item" key={name}>
+                <span className="name">{name}</span>
+                <span className="mins">{total}</span>
+              </div>
+            ))}
+          {goalSummary.opponent > 0 && (
+            <div className="total-item">
+              <span className="name">Opponent</span>
+              <span className="mins">{goalSummary.opponent}</span>
+            </div>
+          )}
+          {goalEvents.length === 0 && (
+            <div className="next-sub-empty" style={{ gridColumn: '1 / -1' }}>No goals recorded</div>
+          )}
+        </div>
+        {goalEvents.length > 0 && (
+          <div className="goal-log">
+            {[...goalEvents].reverse().map(goal => (
+              <div className="goal-log-item" key={goal.id}>
+                <span><strong>{goal.scorer}</strong></span>
+                <div className="goal-log-actions">
+                  <span>{fmtTime(goal.timeSec)} | Stint {goal.stintIdx + 1}</span>
+                  <button className="btn ghost" onClick={() => editGoal(goal.id)}>Edit</button>
+                  <button className="btn ghost" onClick={() => deleteGoal(goal.id)}>Delete</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="footer-note">
@@ -1948,6 +2410,29 @@ function GameScreen({ config, initialRotation, onExit }) {
         the clock will resync to the correct time when you wake it back up. Audio
         chimes only fire while the screen is on.
       </div>
+
+      {/* Goal modal */}
+      {goalOpen && (
+        <div className="modal-backdrop" onClick={() => { setGoalOpen(false); setEditingGoalId(null); }}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>{editingGoalId ? 'Edit goal' : 'Goal scorer'}</h3>
+            <p>{editingGoalId ? 'Choose the correct scorer.' : `Choose who scored at ${fmtTime(elapsedSec)}.`}</p>
+
+            <div className="goal-picker">
+              {goalPickerScorers.map(name => (
+                <button className="btn" key={name} onClick={() => recordGoal(name)}>
+                  {name}
+                </button>
+              ))}
+              <button className="btn danger" onClick={() => recordGoal('Opponent')}>
+                Opponent
+              </button>
+            </div>
+
+            <button className="btn ghost full" onClick={() => { setGoalOpen(false); setEditingGoalId(null); }}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {/* Roster modal */}
       {rosterOpen && (
@@ -1966,6 +2451,37 @@ function GameScreen({ config, initialRotation, onExit }) {
               />
               <button className="btn primary" onClick={addRosterPlayer}>Add</button>
             </div>
+            <div className="radio-row" style={{ marginTop: 10 }}>
+              <label className={`radio-label ${newRosterMode === 'bench' ? 'checked' : ''}`}>
+                <input
+                  type="radio"
+                  name="newRosterMode"
+                  checked={newRosterMode === 'bench'}
+                  onChange={() => setNewRosterMode('bench')}
+                />
+                Bench
+              </label>
+              <label className={`radio-label ${newRosterMode === 'now' ? 'checked' : ''}`}>
+                <input
+                  type="radio"
+                  name="newRosterMode"
+                  checked={newRosterMode === 'now'}
+                  onChange={() => setNewRosterMode('now')}
+                />
+                Work in now
+              </label>
+            </div>
+            {config.hasGoalkeeper && (
+              <label className="toggle" style={{ marginTop: 10 }}>
+                <input
+                  type="checkbox"
+                  checked={newRosterGkAllowed}
+                  onChange={e => setNewRosterGkAllowed(e.target.checked)}
+                />
+                <span className="toggle-track" />
+                <span className="toggle-label">Eligible for GK</span>
+              </label>
+            )}
 
             <div className="swap-section-label">Active players</div>
             <div className="roster-list">
@@ -1974,7 +2490,7 @@ function GameScreen({ config, initialRotation, onExit }) {
                 .map(p => (
                   <span key={p} className="roster-chip">
                     {p}
-                    <button onClick={() => removeRosterPlayer(p)} aria-label={`Remove ${p}`}>×</button>
+                    <button onClick={() => removeRosterPlayer(p)} aria-label={`Remove ${p}`}>x</button>
                   </span>
                 ))
               }
@@ -1995,17 +2511,14 @@ function GameScreen({ config, initialRotation, onExit }) {
   );
 }
 
-// Helper: get the players who participate in field rotation.
 function getRotationPlayers(config) {
   return [...config.players];
 }
 
-// Replan rotation from a given stint, given new on-field/off-field state
+// Rebuild the remaining plan after a live manual sub or roster change.
 function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRotationPlayers, goalkeeperSchedule = [], totalStints }) {
-  // Keep stints [0..fromIdx-1] as is
   const past = rotation.stints.slice(0, fromIdx).map(s => ({ ...s, onField: [...s.onField], offField: [...s.offField], subOut: [...s.subOut], subIn: [...s.subIn] }));
 
-  // Compute past stint counts so we can carry them forward
   const stintsPlayed = {};
   const lastAnchored = {};
   const origOrder = {};
@@ -2036,8 +2549,6 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
       : [...newOffField, restingGoalkeeper];
   }
 
-  // Current stint (fromIdx): use newOnField/newOffField
-  // Update subOut/subIn for THIS stint relative to previous on-field
   const prevOnField = fromIdx > 0 ? past[fromIdx - 1].onField : [];
   const subOut = prevOnField.filter(p => !newOnField.includes(p));
   const subIn = newOnField.filter(p => !prevOnField.includes(p));
@@ -2054,7 +2565,6 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
     subIn,
   }];
 
-  // For future stints, run the rotation algorithm forward from newOnField
   let onField = [...newOnField];
   let bench = [...newOffField];
 
@@ -2073,7 +2583,6 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
     const effectiveK = Math.min(K, N);
 
     if (N <= effectiveK || bench.length === 0) {
-      // Everyone always on
       newStints.push({
         idx: s,
         goalkeeper,
@@ -2126,9 +2635,7 @@ function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRot
   return { stints: newStints, totalsByPlayer: { ...stintsPlayed } };
 }
 
-// ─────────────────────────────────────────────────────────
-// App root
-// ─────────────────────────────────────────────────────────
+// App shell and persistence
 function App() {
   const [phase, setPhase] = useState('setup');
   const [config, setConfig] = useState({
@@ -2139,13 +2646,14 @@ function App() {
     goalkeeperName: '',
     goalkeeperNames: [],
     goalkeeperBlockStints: 2,
+    startingGoalkeeper: '',
     players: [],
     startersMode: 'random',
     chosenStarters: [],
   });
   const [rotation, setRotation] = useState(null);
+  const [savedLive, setSavedLive] = useState(null);
 
-  // Load from localStorage on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -2159,15 +2667,20 @@ function App() {
           goalkeeperName: saved.goalkeeperName ?? '',
           goalkeeperNames: saved.goalkeeperNames ?? (saved.players ?? []),
           goalkeeperBlockStints: saved.goalkeeperBlockStints ?? 2,
+          startingGoalkeeper: saved.startingGoalkeeper ?? '',
           players: saved.players ?? [],
           startersMode: saved.startersMode ?? 'random',
           chosenStarters: saved.chosenStarters ?? [],
         });
       }
+      const liveRaw = localStorage.getItem(LIVE_STORAGE_KEY);
+      if (liveRaw) {
+        const live = JSON.parse(liveRaw);
+        if (live?.config && live?.rotation) setSavedLive(live);
+      }
     } catch (e) { /* ignore */ }
   }, []);
 
-  // Persist
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
@@ -2175,15 +2688,14 @@ function App() {
   }, [config]);
 
   const handleGenerate = () => {
+    try { localStorage.removeItem(LIVE_STORAGE_KEY); } catch (e) { /* ignore */ }
+    setSavedLive(null);
     const numStints = Math.ceil(config.gameLength / config.stintLength);
     const rotPlayers = getRotationPlayers(config);
     const fieldK = config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField;
 
-    // Determine starter ordering: put the K starters first; the rotation
-    // algorithm uses input order to seed the initial on-field set and for
-    // tiebreaks, so the order matters for the entire game flow.
     let orderedPlayers;
-    const validChosen = config.chosenStarters.filter(p => rotPlayers.includes(p));
+    const validChosen = config.chosenStarters.filter(p => rotPlayers.includes(p) && p !== config.startingGoalkeeper);
     if (config.startersMode === 'manual' && validChosen.length === fieldK) {
       const rest = shuffle(rotPlayers.filter(p => !validChosen.includes(p)));
       orderedPlayers = [...validChosen, ...rest];
@@ -2197,36 +2709,72 @@ function App() {
     setPhase('preview');
   };
 
+  const resumeLiveGame = () => {
+    if (!savedLive?.config || !savedLive?.rotation) return;
+    setConfig(savedLive.config);
+    setRotation(savedLive.rotation);
+    setPhase('game');
+  };
+
+  const discardLiveGame = () => {
+    if (!confirm('Discard the saved live game?')) return;
+    try { localStorage.removeItem(LIVE_STORAGE_KEY); } catch (e) { /* ignore */ }
+    setSavedLive(null);
+  };
+
+  const handleGameExit = () => {
+    try {
+      const liveRaw = localStorage.getItem(LIVE_STORAGE_KEY);
+      setSavedLive(liveRaw ? JSON.parse(liveRaw) : null);
+    } catch (e) { /* ignore */ }
+    setPhase('setup');
+  };
+
   const phaseLabel = { setup: 'Setup', preview: 'Plan', game: 'Game' }[phase];
 
   return (
     <div className="app">
       <div className="app-header">
-        <h1><span className="accent" />Rotation</h1>
+        <h1><span className="accent" />PlayTime</h1>
         <span className="phase-label">{phaseLabel}</span>
       </div>
 
       {phase === 'setup' && (
-        <SetupScreen
-          config={config}
-          setConfig={setConfig}
-          onGenerate={handleGenerate}
-        />
+        <>
+          {savedLive && (
+            <div className="recovery-panel">
+              <div className="section-title" style={{ margin: 0 }}>Saved Live Game</div>
+              <div className="help-note" style={{ marginTop: 10 }}>
+                Resume the in-progress game at {fmtTime((savedLive.elapsedMs || 0) / 1000)} with {savedLive.goalEvents?.length || 0} goal{(savedLive.goalEvents?.length || 0) === 1 ? '' : 's'} recorded.
+              </div>
+              <div className="btn-row">
+                <button className="btn primary" onClick={resumeLiveGame}>Resume game</button>
+                <button className="btn ghost" onClick={discardLiveGame}>Discard</button>
+              </div>
+            </div>
+          )}
+          <SetupScreen
+            config={config}
+            setConfig={setConfig}
+            onGenerate={handleGenerate}
+          />
+        </>
       )}
       {phase === 'preview' && rotation && (
         <PreviewScreen
           config={config}
           rotation={rotation}
-          onStart={() => setPhase('game')}
+          onStart={() => { setSavedLive(null); setPhase('game'); }}
           onBack={() => setPhase('setup')}
         />
       )}
       {phase === 'game' && rotation && (
         <GameScreen
-          key={`${phase}-${config.gameLength}-${config.stintLength}-${config.goalkeeperBlockStints}`}
+          key={`${phase}-${config.gameLength}-${config.stintLength}-${config.goalkeeperBlockStints}-${savedLive?.savedAt || 'new'}`}
           config={config}
           initialRotation={rotation}
-          onExit={() => setPhase('setup')}
+          initialLive={savedLive}
+          onExit={handleGameExit}
         />
       )}
     </div>

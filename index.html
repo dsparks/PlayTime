@@ -72,6 +72,7 @@
     margin-bottom: 20px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--line);
+    gap: 12px;
   }
   .app-header h1 {
     font-family: 'Oswald', sans-serif;
@@ -98,6 +99,16 @@
     text-transform: uppercase;
     letter-spacing: 0.12em;
     font-weight: 600;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .how-to-btn {
+    padding: 6px 9px;
+    font-size: 11px;
+    white-space: nowrap;
   }
 
   /* Buttons */
@@ -2752,7 +2763,10 @@ function App() {
     <div className="app">
       <div className="app-header">
         <h1><span className="accent" />PlayTime</h1>
-        <span className="phase-label">{phaseLabel}</span>
+        <div className="header-actions">
+          <button className="btn ghost how-to-btn" onClick={() => setShowOnboarding(true)}>How to use</button>
+          <span className="phase-label">{phaseLabel}</span>
+        </div>
       </div>
 
       {showOnboarding && (

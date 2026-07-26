@@ -397,6 +397,19 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   font-variant-numeric: tabular-nums; font-weight: 800;
   font-variation-settings: 'wdth' 108, 'wght' 800;
 }
+/* A one-line door to somewhere else. Used for the things a coach sets
+   once a season, which do not deserve permanent screen space. */
+.linkrow {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: var(--tap); padding: 12px var(--pad); text-align: left;
+  background: var(--raised); border: 1px solid var(--line); border-radius: var(--r-lg);
+}
+.linkrow:active { background: var(--sunk); }
+.linkrow .cap { flex: 1; min-width: 0; }
+.linkrow .cap .t { font-size: 15px; font-weight: 700; font-variation-settings: 'wdth' 100, 'wght' 700; }
+.linkrow .cap .s { font-size: 12.5px; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.linkrow .chev { color: var(--ink-3); font-size: 22px; line-height: 1; }
+
 .segs { display: flex; gap: 4px; background: var(--sunk); padding: 4px; border-radius: var(--r-md); }
 .segs button {
   flex: 1; min-height: 42px; border-radius: var(--r-sm);
@@ -1219,7 +1232,7 @@ function screenTeam() {
 
   wrap.append(h('div', { class: 'rail' },
     h('div', { class: 'wordmark grow' }, h('i'), 'PlayTime'),
-    h('button', { class: 'rail-btn', onclick: () => open('settings'), 'aria-label': 'Settings' }, '⚙')
+    h('button', { class: 'rail-btn', onclick: () => open('setup', { tab: 'match' }), 'aria-label': 'Setup' }, '⚙')
   ));
 
   const body = h('div', { class: 'scroll' });
@@ -1232,7 +1245,7 @@ function screenTeam() {
           h('div', { class: 'nm', style: { fontSize: '18px', color: 'var(--ink)' } }, 'Add your team once.'),
           h('div', { style: { marginTop: '6px' } }, 'After that, every match starts with two taps: mark who turned up, kick off.')
         ),
-        h('button', { class: 'btn go big grow', style: { width: '100%' }, onclick: () => open('roster') }, 'Add players')
+        h('button', { class: 'btn go big grow', style: { width: '100%' }, onclick: () => open('setup', { tab: 'team' }) }, 'Add players')
       )
     );
     return wrap;
@@ -1264,27 +1277,23 @@ function screenTeam() {
   body.append(h('div', { class: 'sec' }, head, tiles,
     h('div', { class: 'row', style: { marginTop: '10px' } },
       h('button', { class: 'btn quiet grow', onclick: () => { S.lastSquad = S.roster.map(p => p.id); save(); render(); } }, 'All here'),
-      h('button', { class: 'btn quiet grow', onclick: () => open('roster') }, 'Edit team')
+      h('button', { class: 'btn quiet grow', onclick: () => open('setup', { tab: 'team' }) }, 'Edit team')
     )
   ));
 
-  // --- match shape ---
-  const spp = stintsPerPeriod(cfg);
+  // --- match format: set once a season, so it gets one line, not a panel ---
   const secs = Math.round(stintMs(cfg) / 1000);
-  const shape = h('div', { class: 'card' },
-    h('div', { class: 'segs', style: { marginBottom: '10px' } },
-      [[2, 'Halves'], [4, 'Quarters']].map(([n, t]) =>
-        h('button', { class: cfg.periods === n ? 'on' : '', onclick: () => { cfg.periods = n; save(); render(); } }, t))
-    ),
-    h('div', { class: 'steps' },
-      stepper('Each ' + (cfg.periods === 4 ? 'quarter' : 'half'), cfg.periodMin + ' min',
-        cfg.periodMin, 1, 60, v => { cfg.periodMin = v; }),
-      stepper('Swap every', spp + ' × ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + ' per ' + (cfg.periods === 4 ? 'quarter' : 'half'),
-        cfg.stintMin, 1, 20, v => { cfg.stintMin = v; }),
-      stepper('On the field', cfg.useGk ? 'including the keeper' : 'no keeper', cfg.onField, 1, 11, v => { cfg.onField = v; })
+  body.append(h('div', { class: 'sec' },
+    h('button', { class: 'linkrow', onclick: () => open('setup', { tab: 'match' }) },
+      h('div', { class: 'cap' },
+        h('div', { class: 't' }, 'Match format'),
+        h('div', { class: 's' },
+          cfg.periods + ' × ' + cfg.periodMin + ' min · swap every ' +
+          Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + ' · ' +
+          cfg.onField + ' on the field' + (cfg.useGk ? ' incl. keeper' : ''))),
+      h('span', { class: 'chev' }, '›')
     )
-  );
-  body.append(h('div', { class: 'sec' }, h('div', { class: 'sec-head' }, lbl('Match')), shape));
+  ));
 
   // --- readiness ---
   const avail = S.lastSquad.filter(id => byId(id));
@@ -1313,14 +1322,14 @@ function estimateMinutes(nAvail, cfg) {
   return total * Math.min(cfg.onField, nAvail) / Math.max(1, nAvail);
 }
 
-function stepper(title, subtitle, value, lo, hi, set) {
-  const apply = (d) => { set(clamp(value + d, lo, hi)); save(); render(); };
-  return h('div', { class: 'step' },
+function stepper(title, subtitle, value, lo, hi, set, disabled) {
+  const apply = (d) => { if (disabled) return; set(clamp(value + d, lo, hi)); save(); render(); };
+  return h('div', { class: 'step', style: { opacity: disabled ? .45 : 1 } },
     h('div', { class: 'cap' }, h('div', { class: 't' }, title), h('div', { class: 's' }, subtitle)),
     h('div', { class: 'ctl' },
-      h('button', { onclick: () => apply(-1), 'aria-label': 'Decrease ' + title }, '−'),
+      h('button', { onclick: () => apply(-1), disabled: !!disabled, 'aria-label': 'Decrease ' + title }, '−'),
       h('div', { class: 'val fig' }, value),
-      h('button', { onclick: () => apply(1), 'aria-label': 'Increase ' + title }, '+')
+      h('button', { onclick: () => apply(1), disabled: !!disabled, 'aria-label': 'Increase ' + title }, '+')
     )
   );
 }
@@ -1334,7 +1343,7 @@ function screenLineup() {
   wrap.append(h('div', { class: 'rail' },
     h('button', { class: 'rail-btn', onclick: () => { S.game = null; save(); render(); }, 'aria-label': 'Back' }, '‹'),
     h('div', { class: 'wordmark grow' }, 'Starting lineup'),
-    h('button', { class: 'rail-btn', onclick: () => open('settings'), 'aria-label': 'Settings' }, '⚙')
+    h('button', { class: 'rail-btn', onclick: () => open('setup', { tab: 'match' }), 'aria-label': 'Setup' }, '⚙')
   ));
 
   const body = h('div', { class: 'scroll' });
@@ -1569,8 +1578,7 @@ function paintLayer() {
   if (overlay) {
     if (overlay.kind === 'sheet') kids.push(sheetMatch(overlay.tab || 'minutes'));
     else if (overlay.kind === 'goal') kids.push(sheetGoal());
-    else if (overlay.kind === 'roster') kids.push(sheetRoster());
-    else if (overlay.kind === 'settings') kids.push(sheetSettings());
+    else if (overlay.kind === 'setup') kids.push(sheetSetup(overlay.tab || 'match'));
   }
 
   if (toastState) {
@@ -1613,7 +1621,7 @@ function sheetMatch(tab) {
   return sheet('Match', [seg, panel],
     h('div', { class: 'row' },
       h('button', { class: 'btn quiet grow', disabled: !g.hist.length, onclick: () => { close(); undo(); } }, 'Undo last'),
-      h('button', { class: 'btn quiet grow', onclick: () => open('settings') }, 'Settings'),
+      h('button', { class: 'btn quiet grow', onclick: () => open('setup', { tab: 'app' }) }, 'Setup'),
       h('button', { class: 'btn grow', onclick: close }, 'Close')
     ));
 }
@@ -1738,7 +1746,17 @@ function panelClock(g) {
     h('button', { class: 'btn tall', style: { width: '100%' }, onclick: () => { close(); raiseDue(true); } },
       'End the ' + periodLong(g.period, S.cfg.periods) + ' now'),
     h('button', { class: 'btn danger tall', style: { width: '100%', marginTop: '8px' }, onclick: () => { close(); endMatch(); } },
-      'End the match')
+      'End the match'),
+    h('button', {
+      class: 'btn danger tall', style: { width: '100%', marginTop: '8px' },
+      onclick: () => {
+        if (confirm('Abandon this match? Minutes and goals will be lost.')) {
+          S.game = null; close(); save(); render();
+        }
+      }
+    }, 'Abandon — keep nothing'),
+    h('div', { class: 'note', style: { marginTop: '10px' } },
+      '“End the match” keeps the minutes and the score for the summary. “Abandon” throws them away.')
   );
 }
 
@@ -1760,93 +1778,178 @@ function sheetGoal() {
       'Goal for the opponent'));
 }
 
-/* --- roster editor --- */
-function sheetRoster() {
-  const input = h('input', { class: 'input', placeholder: 'Player name', autocapitalize: 'words', autocomplete: 'off' });
+/* --------------------------- setup sheet ---------------------------- */
+/* Everything that is not "who is here today" and not "run this match"
+   lives here, and nowhere else. Three tabs, because there are genuinely
+   three kinds of knob: things about the children, things about the
+   league's format, and things about this phone. */
+
+function switchRow(title, sub, key, after, disabled) {
+  const cfg = S.cfg;
+  return h('button', {
+    class: 'switch' + (cfg[key] ? ' on' : ''),
+    style: { width: '100%', textAlign: 'left', opacity: disabled ? .45 : 1 },
+    'aria-pressed': cfg[key] ? 'true' : 'false',
+    disabled: !!disabled,
+    // guarded here as well as by the attribute — the lock is a rule, not
+    // a rendering detail
+    onclick: () => { if (disabled) return; cfg[key] = !cfg[key]; after && after(); save(); render(); }
+  },
+    h('div', { class: 'cap' },
+      h('div', { class: 't', style: { fontSize: '15px', fontWeight: 700 } }, title),
+      h('div', { class: 'note' }, sub)),
+    h('span', { class: 'track' })
+  );
+}
+
+function sheetSetup(tab) {
+  const g = S.game;
+  const inPlay = !!(g && (g.state === 'live' || g.state === 'break'));
+  const tabs = [['team', 'Team'], ['match', 'Match'], ['app', 'App']];
+  const seg = h('div', { class: 'segs', style: { marginBottom: '14px' } },
+    tabs.map(([k, t]) => h('button', { class: tab === k ? 'on' : '', onclick: () => open('setup', { tab: k }) }, t)));
+
+  const panel = tab === 'team' ? setupTeam(inPlay)
+    : tab === 'match' ? setupMatch(inPlay)
+      : setupApp();
+
+  return sheet('Setup', [seg, panel],
+    h('button', { class: 'btn go big', style: { width: '100%' }, onclick: close }, 'Done'));
+}
+
+function setupTeam(inPlay) {
+  const input = h('input', {
+    class: 'input', placeholder: 'Player name', autocapitalize: 'words', autocomplete: 'off',
+  });
   const add = () => {
     const n = input.value.trim();
     if (!n) return;
     if (S.roster.some(p => p.name.toLowerCase() === n.toLowerCase())) { input.value = ''; return; }
     const p = { id: uid(), name: n, gk: false };
     S.roster.push(p);
-    S.lastSquad.push(p.id);
+    if (!S.lastSquad.includes(p.id)) S.lastSquad.push(p.id);
+    // a child entered while the match is on has clearly just turned up
+    if (inPlay) setAvailable(p.id, true);
     input.value = '';
     save(); render();
     setTimeout(() => { const el = document.querySelector('.sheet .input'); el && el.focus(); }, 0);
   };
   input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
 
-  return sheet('Your team', [
+  const inThisMatch = (id) => inPlay && S.game.squad.includes(id);
+
+  return h('div', null,
     h('div', { class: 'row' }, input, h('button', { class: 'btn go', onclick: add }, 'Add')),
-    S.cfg.useGk
-      ? h('div', { class: 'note', style: { marginTop: '10px' } }, 'Tap the glove to say who is allowed in goal.')
-      : null,
+    h('div', { class: 'note', style: { marginTop: '10px' } },
+      inPlay
+        ? 'Anyone added now joins the match straight away.'
+        : S.cfg.useGk
+          ? 'Tap the glove to say who is allowed in goal.'
+          : 'This list is remembered between matches — you only mark who turned up.'),
     h('div', { class: 'sec' },
       S.roster.length
         ? h('div', { style: { display: 'flex', flexDirection: 'column' } },
-            S.roster.map(p => h('div', { class: 'bar-row', style: { gridTemplateColumns: '1fr auto auto', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--line)' } },
+            S.roster.map(p => h('div', {
+              class: 'bar-row',
+              style: { gridTemplateColumns: '1fr auto auto', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--line)' }
+            },
               h('div', { class: 'who', style: { fontSize: '16px' } }, p.name),
               S.cfg.useGk ? h('button', {
-                class: 'btn quiet', style: { minHeight: '38px', padding: '0 12px', color: p.gk ? 'var(--gk)' : 'var(--ink-3)' },
+                class: 'btn quiet',
+                style: { minHeight: '38px', padding: '0 12px', color: p.gk ? 'var(--gk)' : 'var(--ink-3)' },
+                'aria-pressed': p.gk ? 'true' : 'false',
+                'aria-label': (p.gk ? 'Stop ' : 'Let ') + p.name + ' keep goal',
                 onclick: () => { p.gk = !p.gk; save(); render(); }
               }, p.gk ? '🧤 Keeper' : '🧤') : null,
-              h('button', {
-                class: 'btn quiet', style: { minHeight: '38px', padding: '0 12px', color: 'var(--alert)' },
-                onclick: () => {
-                  S.roster = S.roster.filter(x => x.id !== p.id);
-                  S.lastSquad = S.lastSquad.filter(x => x !== p.id);
-                  save(); render();
-                }
-              }, 'Remove')
+              inThisMatch(p.id)
+                ? h('div', { class: 'note', style: { fontSize: '11px' } }, 'playing')
+                : h('button', {
+                    class: 'btn quiet', style: { minHeight: '38px', padding: '0 12px', color: 'var(--alert)' },
+                    onclick: () => {
+                      S.roster = S.roster.filter(x => x.id !== p.id);
+                      S.lastSquad = S.lastSquad.filter(x => x !== p.id);
+                      save(); render();
+                    }
+                  }, 'Remove')
             )))
         : h('div', { class: 'empty' }, 'No players yet.'))
-  ],
-    h('button', { class: 'btn go big', style: { width: '100%' }, onclick: close }, 'Done'));
+  );
 }
 
-/* --- settings --- */
-function sheetSettings() {
-  const cfg = S.cfg;
-  const sw = (title, sub, key, after) => h('button', {
-    class: 'switch' + (cfg[key] ? ' on' : ''), style: { width: '100%', textAlign: 'left' },
-    'aria-pressed': cfg[key] ? 'true' : 'false',
-    onclick: () => { cfg[key] = !cfg[key]; after && after(); save(); render(); }
-  },
-    h('div', { class: 'cap' }, h('div', { class: 't', style: { fontSize: '15px', fontWeight: 700 } }, title),
-      h('div', { class: 'note' }, sub)),
-    h('span', { class: 'track' })
-  );
+/* The format can still be changed while a lineup is sitting on screen
+   waiting for kick-off, so the lineup has to follow it. */
+function syncPending() {
+  const g = S.game;
+  if (g && g.state === 'pre') g.pending = computePending(g, true);
+}
 
-  return sheet('Settings', [
-    lbl('During the match'),
-    sw('Stop the clock at every swap', 'The buzzer pauses the clock; “Done” starts it again. Turn off if you sub on the fly.', 'pauseAtSub'),
-    sw('Buzzer', 'A loud two-tone blast at every swap, break and full time.', 'sound'),
-    sw('Vibrate', 'In case the phone is in a pocket.', 'haptics'),
+function setupMatch(inPlay) {
+  const cfg = S.cfg;
+  const spp = stintsPerPeriod(cfg);
+  const secs = Math.round(stintMs(cfg) / 1000);
+  const per = cfg.periods === 4 ? 'quarter' : 'half';
+  const eligible = S.roster.filter(p => p.gk).length;
+
+  return h('div', null,
+    inPlay ? h('div', { class: 'card', style: { marginBottom: '14px' } },
+      h('div', { class: 'note' },
+        'The format is locked while a match is on, so the plan cannot shift under your feet. ' +
+        'End the match first if you need to change it.')) : null,
+
+    h('div', { class: 'segs', style: { marginBottom: '12px', opacity: inPlay ? .45 : 1 } },
+      [[2, 'Halves'], [4, 'Quarters']].map(([n, t]) =>
+        h('button', {
+          class: cfg.periods === n ? 'on' : '', disabled: inPlay,
+          onclick: () => { if (inPlay) return; cfg.periods = n; syncPending(); save(); render(); }
+        }, t))),
+
+    h('div', { class: 'steps' },
+      stepper('Each ' + per, cfg.periodMin + ' min',
+        cfg.periodMin, 1, 60, v => { cfg.periodMin = v; syncPending(); }, inPlay),
+      stepper('Swap every',
+        spp + ' × ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + ' per ' + per,
+        cfg.stintMin, 1, 20, v => { cfg.stintMin = v; syncPending(); }, inPlay),
+      stepper('On the field', cfg.useGk ? 'including the keeper' : 'no keeper',
+        cfg.onField, 1, 11, v => { cfg.onField = v; syncPending(); }, inPlay)
+    ),
 
     h('hr', { class: 'hr' }),
-    lbl('Goalkeeper'),
-    sw('Play with a keeper', 'Off by default — plenty of young leagues do not bother.', 'useGk', () => {
-      if (S.cfg.useGk && !S.roster.some(p => p.gk)) S.roster.forEach(p => { p.gk = true; });
-    }),
+    switchRow('Play with a keeper', 'Off by default — plenty of young leagues do not bother.',
+      'useGk', () => {
+        if (S.cfg.useGk && !S.roster.some(p => p.gk)) S.roster.forEach(p => { p.gk = true; });
+        syncPending();
+      }, inPlay),
     cfg.useGk ? h('div', { class: 'steps', style: { marginTop: '6px' } },
-      stepper('Keeper changes every', cfg.gkEvery + ' stint' + (cfg.gkEvery === 1 ? '' : 's'), cfg.gkEvery, 1, 12, v => { cfg.gkEvery = v; })
-    ) : null,
-    cfg.useGk ? sw('Time in goal counts as playing time', 'Off means a keeper still gets their full share of outfield minutes.', 'gkCounts') : null,
+      stepper('Keeper changes every', cfg.gkEvery + ' stint' + (cfg.gkEvery === 1 ? '' : 's'),
+        cfg.gkEvery, 1, 12, v => { cfg.gkEvery = v; syncPending(); }, inPlay)) : null,
+    cfg.useGk ? switchRow('Time in goal counts as playing time',
+      'Off means a keeper still gets their full share of outfield minutes.', 'gkCounts', syncPending, inPlay) : null,
+    cfg.useGk ? h('button', {
+      class: 'linkrow', style: { marginTop: '10px' }, onclick: () => open('setup', { tab: 'team' })
+    },
+      h('div', { class: 'cap' },
+        h('div', { class: 't' }, 'Who can keep goal'),
+        h('div', { class: 's' }, eligible + ' of ' + S.roster.length + ' — set it on each player')),
+      h('span', { class: 'chev' }, '›')
+    ) : null
+  );
+}
 
+function setupApp() {
+  const cfg = S.cfg;
+  return h('div', null,
+    switchRow('Stop the clock at every swap',
+      'The buzzer pauses the clock; “Done” starts it again. Turn off if you sub on the fly.', 'pauseAtSub'),
+    switchRow('Buzzer', 'A loud two-tone blast at every swap, break and full time.', 'sound'),
+    switchRow('Vibrate', 'In case the phone is in a pocket.', 'haptics'),
     h('hr', { class: 'hr' }),
     lbl('Screen'),
     h('div', { class: 'segs', style: { marginTop: '8px' } },
       [['auto', 'Auto'], ['day', 'Daylight'], ['night', 'Night']].map(([k, t]) =>
         h('button', { class: cfg.theme === k ? 'on' : '', onclick: () => { cfg.theme = k; save(); render(); } }, t))),
-    h('div', { class: 'note', style: { marginTop: '8px' } }, 'Daylight is a high-contrast mode for bright sun, not just a light theme.'),
-
-    S.game ? h('div', null, h('hr', { class: 'hr' }),
-      h('button', {
-        class: 'btn danger tall', style: { width: '100%' },
-        onclick: () => { if (confirm('Abandon this match? Minutes and goals will be lost.')) { S.game = null; close(); save(); render(); } }
-      }, 'Abandon this match')) : null
-  ],
-    h('button', { class: 'btn go big', style: { width: '100%' }, onclick: close }, 'Done'));
+    h('div', { class: 'note', style: { marginTop: '8px' } },
+      'Daylight is a high-contrast mode for bright sun, not just a light theme.')
+  );
 }
 
 /* --- period break --- */

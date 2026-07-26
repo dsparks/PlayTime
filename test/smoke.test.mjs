@@ -288,10 +288,10 @@ test('every sheet builds without throwing', () => {
   }
   app.open('goal');
   assert(shows('Who scored?'), 'goal sheet missing');
-  app.open('settings');
-  assert(shows('Settings'), 'settings sheet missing');
-  app.open('roster');
-  assert(shows('Your team'), 'roster sheet missing');
+  for (const tab of ['team', 'match', 'app']) {
+    app.open('setup', { tab });
+    assert(shows('Setup'), 'setup sheet missing on tab ' + tab);
+  }
   app.close();
   assert(!screenText(layerEl).includes('Who scored?'), 'sheet did not close');
   walk(layerEl, n => assert(!/\bsheet\b/.test(n.className || ''), 'a sheet is still open'));
@@ -402,6 +402,81 @@ test('a keeper match runs end to end', () => {
     'nobody accrued time in goal');
 });
 
+/* ------------------------- setup lives in one place ------------------ */
+
+test('changing the format before kick-off reshapes the lineup', () => {
+  const S = app.S;
+  S.cfg.useGk = false; S.cfg.onField = 4;
+  S.game = app.newGame(S.lastSquad.slice());
+  app.render();
+  eq(S.game.pending.field.length, 4, 'starting XI before the change');
+
+  app.open('setup', { tab: 'match' });
+  const plus = buttons(layerEl).find(b =>
+    (b.getAttribute('aria-label') || '') === 'Increase On the field');
+  assert(plus, 'no stepper for players on the field');
+  plus.click();
+
+  eq(S.cfg.onField, 5, 'the setting did not change');
+  eq(app.S.game.pending.field.length, 5, 'the lineup did not follow the setting');
+  app.close();
+});
+
+test('the format is locked once the match is under way', () => {
+  const S = app.S;
+  S.cfg.onField = 4;
+  S.game = app.newGame(S.lastSquad.slice());
+  app.startClock();
+  advance(30000);
+
+  app.open('setup', { tab: 'match' });
+  assert(shows('locked while a match is on'), 'no explanation of the lock');
+  const before = JSON.stringify(S.cfg);
+  buttons(layerEl).forEach(b => { try { b.click(); } catch (e) {} });
+  eq(JSON.stringify(S.cfg), before, 'a match-format setting changed mid-match');
+  eq(app.S.game.field.length, 4, 'the lineup shifted mid-match');
+  app.close();
+});
+
+test('app settings stay adjustable mid-match', () => {
+  const S = app.S;
+  app.open('setup', { tab: 'app' });
+  const was = S.cfg.sound;
+  const toggle = buttons(layerEl).find(b => screenText(b).includes('Buzzer'));
+  assert(toggle, 'no buzzer toggle');
+  toggle.click();
+  eq(S.cfg.sound, !was, 'could not silence the buzzer during a match');
+  S.cfg.sound = was;
+  app.close();
+});
+
+test('a child entered mid-match joins the squad straight away', () => {
+  const S = app.S;
+  app.open('setup', { tab: 'team' });
+  let input = null;
+  walk(layerEl, n => { if (n.tagName === 'INPUT' && !input) input = n; });
+  assert(input, 'no name field');
+  input.value = 'Nadia';
+  const addBtn = buttons(layerEl).find(b => screenText(b).trim() === 'Add');
+  assert(addBtn, 'no add button');
+  addBtn.click();
+
+  const p = S.roster.find(x => x.name === 'Nadia');
+  assert(p, 'the player was not added to the team');
+  assert(S.game.squad.includes(p.id), 'the player did not join the match');
+  assert(!S.game.out.includes(p.id), 'the player joined as unavailable');
+  app.close();
+});
+
+test('a player in the current match cannot be deleted from the team', () => {
+  const S = app.S;
+  app.open('setup', { tab: 'team' });
+  const playing = S.game.squad.length;
+  buttons(layerEl).filter(b => screenText(b).trim() === 'Remove').forEach(b => b.click());
+  eq(app.S.game.squad.length, playing, 'a player was removed out from under the match');
+  app.close();
+});
+
 /* -------------------- click absolutely everything -------------------- */
 /* Every button on every screen, each from a fresh state so one click
    cannot mask the next. This is the net that catches a typo in a render
@@ -452,8 +527,9 @@ const SHEETS = [
   ['squad tab', () => app.open('sheet', { tab: 'squad' })],
   ['clock tab', () => app.open('sheet', { tab: 'clock' })],
   ['goal picker', () => app.open('goal')],
-  ['settings', () => app.open('settings')],
-  ['team editor', () => app.open('roster')],
+  ['setup · team', () => app.open('setup', { tab: 'team' })],
+  ['setup · match', () => app.open('setup', { tab: 'match' })],
+  ['setup · app', () => app.open('setup', { tab: 'app' })],
 ];
 
 for (const [scene, setup] of Object.entries(SCENES)) {

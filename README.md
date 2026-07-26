@@ -48,20 +48,35 @@ simply looks at who is behind and fixes it. Nothing needs regenerating.
 out dead level, awkward ones stay within a single stint of each other, and
 nobody is ever left on ahead of a player with fewer minutes.
 
+## Where things live
+
+There are two sheets, and that is all.
+
+- **Setup** (the cog, or the two labelled doors on the team screen) holds
+  everything that is not today's match: **Team** (the roster, and who is
+  allowed in goal), **Match** (halves or quarters, lengths, how many on the
+  field, keepers), **App** (buzzer, vibration, daylight mode).
+- **Match** (the ☰ during a game) holds everything about the game in front
+  of you: **Minutes**, **Goals**, **Squad** (manual swaps, who went home),
+  **Clock** (nudge the timer, end the period, end the match).
+
+The rule is that nothing appears in both. Match format is locked while a
+game is running, so the plan cannot shift under your feet.
+
 ## Things worth knowing
 
-- **Daylight mode** (Settings → Screen) is a genuine high-contrast mode for
+- **Daylight mode** (Setup → App) is a genuine high-contrast mode for
   bright sun, not a decorative light theme.
 - **Coming off is orange, going on is teal.** That pairing stays legible
   for colour-blind coaches, which green-and-red does not — and both columns
   are labelled and arrowed anyway.
 - **The buzzer is a square-wave blast**, not a polite chime, because you
   will be looking at the pitch and not at the phone. It vibrates too.
-- **Keepers are off by default.** Turn them on in Settings and the violet
-  keeper handling appears; leave them off and it stays completely out of
-  sight.
-- **Subbing on the fly?** Turn off *Stop the clock at every swap* and the
-  clock runs straight through the buzzer.
+- **Keepers are off by default.** Turn them on in Setup → Match and the
+  violet keeper handling appears; leave them off and it stays completely
+  out of sight.
+- **Subbing on the fly?** Turn off *Stop the clock at every swap* in
+  Setup → App and the clock runs straight through the buzzer.
 - **Undo** is on the toast after every swap and goal, in the match sheet,
   and on Ctrl/Cmd-Z.
 - The screen is kept awake while the clock runs, and a reload mid-match

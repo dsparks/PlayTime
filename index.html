@@ -2,2834 +2,2016 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d1117">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0b1310" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="description" content="Fair, no-fuss substitution rotations for youth soccer coaches.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>PlayTime</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230b1310'/%3E%3Cpath d='M8 22V10h3.2l3 5.4 3-5.4H20v12' fill='none' stroke='%232fe3ac' stroke-width='2.6' stroke-linecap='square'/%3E%3Ccircle cx='24' cy='11' r='3' fill='%23ffa03d'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap" rel="stylesheet">
 <style>
+/* ============================================================
+   PlayTime — "Touchline"
+   Neutrals biased toward grass; ON/OFF on the blue-orange axis
+   (the one pairing that survives red-green colour blindness);
+   keeper in violet because keepers really do wear a odd kit.
+   One typeface, Archivo variable, worked across its width axis:
+   wide tiny caps for labels, wide huge figures for time,
+   condensed heavy for the names of actual children.
+   ============================================================ */
+
+:root {
+  color-scheme: light dark;
+
+  /* Daylight — this is a sunlight mode, not a decorative light mode.
+     Maximum contrast, solid fills, no washed-out tints. */
+  --ground:      #ffffff;
+  --raised:      #f1f5f3;
+  --sunk:        #e5ebe8;
+  --line:        #cbd6d1;
+  --line-hard:   #97a8a1;
+  --ink:         #06110d;
+  --ink-2:       #3b4e48;
+  --ink-3:       #6a7c75;
+
+  --on:          #00654f;
+  --on-fill:     #00876b;
+  --on-ink:      #ffffff;
+  --on-soft:     #d8f2ea;
+
+  --off:         #82430b;
+  --off-fill:    #b8560a;
+  --off-ink:     #ffffff;
+  --off-soft:    #fbe8d6;
+
+  --gk:          #55299f;
+  --gk-fill:     #7040d8;
+  --gk-ink:      #ffffff;
+  --gk-soft:     #ebe2ff;
+
+  --alert:       #9e1329;
+  --alert-fill:  #cc2340;
+  --alert-ink:   #ffffff;
+  --alert-soft:  #fce2e6;
+
+  --shadow-1: 0 1px 2px rgba(6,17,13,.10);
+  --shadow-2: 0 2px 4px rgba(6,17,13,.08), 0 12px 28px -14px rgba(6,17,13,.30);
+  --sheet-shadow: 0 -8px 40px -8px rgba(6,17,13,.28);
+
+  --sans: 'Archivo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --tap: 52px;
+  --pad: 14px;
+}
+
+/* Night */
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0d1117;
-    --bg-2: #161b22;
-    --bg-3: #1f262e;
-    --line: #2a323d;
-    --text: #f0f6fc;
-    --muted: #8b949e;
-    --dim: #6e7681;
-    --green: #3fb950;
-    --green-2: #56d364;
-    --green-bg: rgba(63, 185, 80, 0.12);
-    --amber: #e3b341;
-    --amber-bg: rgba(227, 179, 65, 0.12);
-    --red: #f85149;
-    --red-bg: rgba(248, 81, 73, 0.12);
-    --blue: #58a6ff;
-  }
+    --ground:    #0b1310;
+    --raised:    #141f1b;
+    --sunk:      #101a16;
+    --line:      #24322c;
+    --line-hard: #3d4f47;
+    --ink:       #eef6f2;
+    --ink-2:     #9db0a8;
+    --ink-3:     #71857d;
 
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Manrope', sans-serif;
-    font-size: 16px;
-    line-height: 1.45;
-    -webkit-font-smoothing: antialiased;
-    overscroll-behavior-y: contain;
-    min-height: 100vh;
-    min-height: 100dvh;
-  }
+    --on:        #2fe3ac;
+    --on-fill:   #2fe3ac;
+    --on-ink:    #032018;
+    --on-soft:   rgba(47,227,172,.14);
 
-  .display-font {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
-  }
+    --off:       #ffa03d;
+    --off-fill:  #ffa03d;
+    --off-ink:   #2a1600;
+    --off-soft:  rgba(255,160,61,.14);
 
-  .mono-num {
-    font-variant-numeric: tabular-nums;
-    font-family: 'Oswald', sans-serif;
-    letter-spacing: 0.04em;
-  }
+    --gk:        #b98bff;
+    --gk-fill:   #b98bff;
+    --gk-ink:    #1b0b38;
+    --gk-soft:   rgba(185,139,255,.16);
 
-  .app {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 16px;
-    padding-bottom: env(safe-area-inset-bottom, 16px);
-    padding-top: max(16px, env(safe-area-inset-top, 16px));
-  }
+    --alert:     #ff6377;
+    --alert-fill:#ff6377;
+    --alert-ink: #2b0008;
+    --alert-soft:rgba(255,99,119,.16);
 
-  .app-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--line);
-    gap: 12px;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.5);
+    --shadow-2: 0 2px 6px rgba(0,0,0,.4), 0 16px 32px -16px rgba(0,0,0,.7);
+    --sheet-shadow: 0 -8px 40px -8px rgba(0,0,0,.7);
   }
-  .app-header h1 {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 18px;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .app-header h1 .accent {
-    width: 10px;
-    height: 18px;
-    background: var(--green);
-    display: inline-block;
-    border-radius: 1px;
-    transform: skewX(-15deg);
-  }
-  .app-header .phase-label {
-    font-size: 11px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-weight: 600;
-  }
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .how-to-btn {
-    padding: 6px 9px;
-    font-size: 11px;
-    white-space: nowrap;
-  }
+}
 
-  /* Buttons */
-  .btn {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-size: 15px;
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    color: var(--text);
-    padding: 12px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .btn:hover { background: var(--bg-3); border-color: var(--dim); }
-  .btn:active { transform: scale(0.98); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .btn.primary {
-    background: var(--green);
-    color: #02210a;
-    border-color: var(--green);
-  }
-  .btn.primary:hover { background: var(--green-2); border-color: var(--green-2); }
-  .btn.danger {
-    background: transparent;
-    color: var(--red);
-    border-color: var(--red);
-  }
-  .btn.danger:hover { background: var(--red-bg); }
-  .btn.ghost {
-    background: transparent;
-    border-color: var(--line);
-    color: var(--muted);
-  }
-  .btn.large {
-    font-size: 18px;
-    padding: 16px 28px;
-  }
-  .btn.full { width: 100%; }
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .btn-row > .btn { flex: 1; min-width: 0; }
+/* Explicit overrides must beat the media query in both directions. */
+:root[data-theme="night"] {
+  --ground:#0b1310; --raised:#141f1b; --sunk:#101a16;
+  --line:#24322c; --line-hard:#3d4f47;
+  --ink:#eef6f2; --ink-2:#9db0a8; --ink-3:#71857d;
+  --on:#2fe3ac; --on-fill:#2fe3ac; --on-ink:#032018; --on-soft:rgba(47,227,172,.14);
+  --off:#ffa03d; --off-fill:#ffa03d; --off-ink:#2a1600; --off-soft:rgba(255,160,61,.14);
+  --gk:#b98bff; --gk-fill:#b98bff; --gk-ink:#1b0b38; --gk-soft:rgba(185,139,255,.16);
+  --alert:#ff6377; --alert-fill:#ff6377; --alert-ink:#2b0008; --alert-soft:rgba(255,99,119,.16);
+  --shadow-1:0 1px 2px rgba(0,0,0,.5);
+  --shadow-2:0 2px 6px rgba(0,0,0,.4), 0 16px 32px -16px rgba(0,0,0,.7);
+  --sheet-shadow:0 -8px 40px -8px rgba(0,0,0,.7);
+}
+:root[data-theme="day"] {
+  --ground:#ffffff; --raised:#f1f5f3; --sunk:#e5ebe8;
+  --line:#cbd6d1; --line-hard:#97a8a1;
+  --ink:#06110d; --ink-2:#3b4e48; --ink-3:#6a7c75;
+  --on:#00654f; --on-fill:#00876b; --on-ink:#ffffff; --on-soft:#d8f2ea;
+  --off:#82430b; --off-fill:#b8560a; --off-ink:#ffffff; --off-soft:#fbe8d6;
+  --gk:#55299f; --gk-fill:#7040d8; --gk-ink:#ffffff; --gk-soft:#ebe2ff;
+  --alert:#9e1329; --alert-fill:#cc2340; --alert-ink:#ffffff; --alert-soft:#fce2e6;
+  --shadow-1:0 1px 2px rgba(6,17,13,.10);
+  --shadow-2:0 2px 4px rgba(6,17,13,.08), 0 12px 28px -14px rgba(6,17,13,.30);
+  --sheet-shadow:0 -8px 40px -8px rgba(6,17,13,.28);
+}
 
-  /* Form fields */
-  .field {
-    margin-bottom: 16px;
-  }
-  .field label {
-    display: block;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    font-weight: 600;
-    color: var(--muted);
-    margin-bottom: 6px;
-  }
-  .field input[type="number"], .field input[type="text"], .field select {
-    width: 100%;
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    color: var(--text);
-    padding: 12px 14px;
-    border-radius: 4px;
-    font-family: 'Manrope', sans-serif;
-    font-size: 16px;
-    transition: border-color 0.12s;
-  }
-  .field input:focus, .field select:focus {
-    outline: none;
-    border-color: var(--green);
-  }
-  .field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 10px;
-  }
-  @media (max-width: 480px) {
-    .field-row { grid-template-columns: 1fr 1fr; }
-    .field-row > .field:nth-child(3) { grid-column: span 2; }
-  }
+/* ---- reset & base ---- */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin:0; padding:0; height:100%; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+}
+input, textarea { -webkit-user-select: text; user-select: text; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--on-fill); outline-offset: 2px; border-radius: 4px; }
 
-  /* Toggle */
-  .toggle {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
-    user-select: none;
-    padding: 10px 0;
-  }
-  .toggle input { display: none; }
-  .toggle-track {
-    width: 44px;
-    height: 24px;
-    background: var(--bg-3);
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    position: relative;
-    transition: background 0.18s;
-  }
-  .toggle-track::after {
-    content: '';
-    position: absolute;
-    top: 2px; left: 2px;
-    width: 18px; height: 18px;
-    background: var(--muted);
-    border-radius: 50%;
-    transition: transform 0.18s, background 0.18s;
-  }
-  .toggle input:checked + .toggle-track {
-    background: var(--green-bg);
-    border-color: var(--green);
-  }
-  .toggle input:checked + .toggle-track::after {
-    transform: translateX(20px);
-    background: var(--green);
-  }
-  .toggle-label {
-    font-weight: 600;
-    font-size: 15px;
-  }
+/* ---- type roles, driven by Archivo's width axis ---- */
+.lbl {                                   /* equipment labels: tiny, wide, spaced */
+  font-size: 10.5px; font-weight: 650;
+  font-variation-settings: 'wdth' 118, 'wght' 650;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+.fig {                                   /* the instrument voice: time, scores */
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  font-variation-settings: 'wdth' 112, 'wght' 800;
+  letter-spacing: -.01em;
+}
+.nm {                                    /* the human voice: children's names */
+  font-weight: 750;
+  font-variation-settings: 'wdth' 92, 'wght' 750;
+  letter-spacing: -.005em;
+}
 
-  /* Radio (starter mode) */
-  .radio-row {
-    display: flex;
-    gap: 16px;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-  }
-  .radio-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    user-select: none;
-    font-weight: 600;
-    font-size: 14px;
-    padding: 6px 10px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    background: var(--bg-2);
-    transition: border-color 0.12s, background 0.12s;
-  }
-  .radio-label.checked {
-    border-color: var(--green);
-    background: var(--green-bg);
-    color: var(--green-2);
-  }
-  .radio-label input[type="radio"] {
-    accent-color: var(--green);
-    width: 16px;
-    height: 16px;
-    margin: 0;
-  }
-  .radio-label .count {
-    font-family: 'Oswald', sans-serif;
-    font-variant-numeric: tabular-nums;
-    margin-left: 4px;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .radio-label.checked .count { color: var(--green-2); }
+/* ---- app frame ---- */
+#app {
+  height: 100dvh;
+  display: flex; flex-direction: column;
+  max-width: 620px; margin: 0 auto;
+}
+.scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 var(--pad) 12px; }
 
-  /* Starter picker chips */
-  .starter-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 12px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    border-radius: 4px;
-    min-height: 40px;
-  }
-  .starter-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    transition: transform 0.1s, background 0.12s, border-color 0.12s;
-    border: 1px solid var(--line);
-    background: var(--bg-3);
-    color: var(--muted);
-  }
-  .starter-chip:active { transform: scale(0.97); }
-  .starter-chip.selected {
-    background: var(--green-bg);
-    border-color: var(--green);
-    color: var(--green-2);
-  }
-  .starter-chip.gk-eligible.selected {
-    background: var(--amber-bg);
-    border-color: var(--amber);
-    color: var(--amber);
-  }
-  .starter-chip.selected::before {
-    content: '*';
-    color: var(--green);
-  }
-  .starter-chip.gk-eligible.selected::before { content: none; }
-  .starter-chip.disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
-  .starter-chip button {
-    background: none;
-    border: none;
-    color: currentColor;
-    cursor: pointer;
-    padding: 0;
-    width: 18px;
-    height: 18px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 1;
-    opacity: 0.8;
-  }
+/* ---- top rail ---- */
+.rail {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px var(--pad); min-height: 46px;
+  padding-top: calc(8px + env(safe-area-inset-top));
+  border-bottom: 1px solid var(--line);
+}
+.rail .grow { flex: 1; min-width: 0; }
+.rail-btn {
+  width: 40px; height: 40px; border-radius: var(--r-md);
+  display: grid; place-items: center; color: var(--ink-2);
+  font-size: 20px; line-height: 1;
+}
+.rail-btn:active { background: var(--sunk); }
+.wordmark {
+  display: flex; align-items: baseline; gap: 7px;
+  font-size: 17px; font-weight: 800;
+  font-variation-settings: 'wdth' 112, 'wght' 800;
+  letter-spacing: -.02em;
+}
+.wordmark i {
+  width: 9px; height: 16px; background: var(--on-fill);
+  transform: skewX(-13deg); display: inline-block; align-self: center;
+}
 
-  /* Roster */
-  .roster-add {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  .roster-add input { flex: 1; }
-  .roster-add .btn { padding: 12px 16px; }
+/* period + clock cluster in the match rail */
+.rail-clock { display: flex; align-items: baseline; gap: 8px; }
+.period-chip {
+  font-size: 11px; font-weight: 750;
+  font-variation-settings: 'wdth' 118, 'wght' 750;
+  letter-spacing: .1em; padding: 3px 7px; border-radius: var(--r-sm);
+  background: var(--sunk); color: var(--ink-2);
+}
+.period-chip.live { background: var(--on-soft); color: var(--on); }
+.rail-time { font-size: 21px; }
+.rail-time.paused { color: var(--ink-3); }
+.rail-score {
+  display: flex; align-items: baseline; gap: 6px; font-size: 19px;
+  min-height: 40px; padding: 0 8px; border-radius: var(--r-md);
+}
+.rail-score:active { background: var(--sunk); }
+.rail-score .sep { color: var(--ink-3); font-weight: 500; }
+.rail-score .us { color: var(--on); }
 
-  .roster-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 16px;
-    min-height: 40px;
-    padding: 12px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    border-radius: 4px;
-  }
-  .roster-list:empty::before {
-    content: 'Add players above to build your roster';
-    color: var(--dim);
-    font-size: 14px;
-    font-style: italic;
-  }
-  .roster-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--bg-3);
-    border: 1px solid var(--line);
-    padding: 6px 10px 6px 12px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
-  }
-  .roster-chip.gk {
-    background: var(--amber-bg);
-    border-color: var(--amber);
-    color: var(--amber);
-  }
-  .gk-tag {
-    font-size: 9px;
-    background: var(--amber);
-    color: #1a1100;
-    padding: 1px 4px;
-    border-radius: 2px;
-    margin-right: -2px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-  .roster-chip button {
-    background: none;
-    border: none;
-    color: var(--muted);
-    cursor: pointer;
-    padding: 0;
-    width: 18px; height: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 1;
-  }
-  .roster-chip button:hover { color: var(--red); }
+/* ---- progress: one segment per period, ticked at each sub ---- */
+.prog { display: flex; gap: 3px; padding: 0 var(--pad); margin-top: 8px; }
+.prog-seg {
+  flex: 1; height: 5px; border-radius: 3px; background: var(--sunk);
+  position: relative; overflow: hidden;
+}
+.prog-seg .fill { position: absolute; inset: 0 auto 0 0; background: var(--on-fill); }
+.prog-seg .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ground); opacity: .85; }
 
-  /* Section */
-  .section {
-    margin-bottom: 24px;
-  }
-  .section-title {
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    font-size: 13px;
-    letter-spacing: 0.14em;
-    color: var(--muted);
-    margin-bottom: 10px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .section-title::before {
-    content: '';
-    width: 12px; height: 2px;
-    background: var(--green);
-    display: inline-block;
-  }
+/* ============ MATCH SCREEN ============ */
+.match { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.match-body {
+  flex: 1; display: flex; flex-direction: column; gap: 12px;
+  padding: 12px var(--pad) 0; min-height: 0; overflow-y: auto;
+}
 
-  /* Rotation table */
-  .rot-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  .rot-stint {
-    display: grid;
-    grid-template-columns: 70px 1fr;
-    gap: 12px;
-    padding: 14px 0;
-    border-top: 1px solid var(--line);
-  }
-  .rot-stint:first-child { border-top: none; }
-  .rot-stint-time {
-    font-family: 'Oswald', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--green);
-  }
-  .rot-stint-num {
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    margin-bottom: 2px;
-    font-weight: 600;
-  }
-  .rot-stint-content { min-width: 0; }
-  .rot-onfield {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  .player-pill {
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    background: var(--green-bg);
-    border: 1px solid var(--green);
-    color: var(--green-2);
-  }
-  .player-pill.gk {
-    background: var(--amber-bg);
-    border-color: var(--amber);
-    color: var(--amber);
-  }
-  .player-pill.off {
-    background: transparent;
-    border-color: var(--line);
-    color: var(--muted);
-  }
-  .rot-subs {
-    font-size: 12px;
-    color: var(--muted);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-    align-items: center;
-  }
-  .rot-subs .out { color: var(--red); }
-  .rot-subs .in { color: var(--green-2); }
-  .rot-subs .arrow { color: var(--dim); }
+/* hero countdown */
+.hero { text-align: center; padding: 4px 0 2px; }
+.hero .cd {
+  font-size: clamp(58px, 19vw, 104px); line-height: .88;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800; font-variation-settings: 'wdth' 108, 'wght' 800;
+  letter-spacing: -.03em;
+}
+.hero .cd.warn { color: var(--off); }
+.hero .sub { margin-top: 7px; }
+.hero.due .cd {
+  font-size: clamp(44px, 14vw, 76px);
+  color: var(--off);
+  animation: pulse 1.15s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .42 } }
+@media (prefers-reduced-motion: reduce) {
+  .hero.due .cd { animation: none; }
+}
 
-  /* Totals */
-  .totals {
-    margin-top: 18px;
-    padding: 14px;
-    background: var(--bg-2);
-    border-radius: 6px;
-    border: 1px solid var(--line);
-  }
-  .totals-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 8px;
-    margin-top: 10px;
-  }
-  .total-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 10px;
-    background: var(--bg-3);
-    border-radius: 4px;
-    font-size: 13px;
-  }
-  .total-item .name { font-weight: 600; }
-  .total-item .mins { color: var(--green-2); font-family: 'Oswald', sans-serif; font-weight: 600; }
-  .total-item.gk .mins { color: var(--amber); }
-  .totals-note {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 8px;
-  }
+/* ---- the substitution board ---- */
+.board { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.board.solo { grid-template-columns: 1fr; }
+.col {
+  border: 2px solid var(--line); border-radius: var(--r-lg);
+  padding: 10px; min-height: 118px;
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--raised);
+}
+.col.out { border-color: var(--off); background: var(--off-soft); }
+.col.in  { border-color: var(--on);  background: var(--on-soft); }
+.col-head { display: flex; align-items: center; gap: 6px; }
+.col-head .arrow { font-size: 15px; line-height: 1; }
+.col.out .col-head, .col.out .arrow { color: var(--off); }
+.col.in  .col-head, .col.in  .arrow { color: var(--on); }
+.col-names { display: flex; flex-direction: column; gap: 5px; }
+.col-names .who {
+  font-size: clamp(19px, 5.6vw, 27px); line-height: 1.12;
+  font-weight: 750; font-variation-settings: 'wdth' 90, 'wght' 780;
+  overflow-wrap: anywhere;
+}
+.col.out .who { color: var(--off); }
+.col.in  .who { color: var(--on); }
+.col-empty { color: var(--ink-3); font-size: 14px; font-style: italic; }
 
-  /* Game screen */
-  .game-screen {
-    text-align: center;
-  }
-  .clock-main {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: clamp(72px, 22vw, 128px);
-    line-height: 1;
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    color: var(--text);
-    margin: 8px 0 0;
-  }
-  .clock-main.running { color: var(--green-2); }
-  .clock-main.paused { color: var(--amber); }
-  .clock-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .clock-stint {
-    display: flex;
-    justify-content: center;
-    align-items: baseline;
-    gap: 14px;
-    margin-top: 8px;
-    color: var(--muted);
-  }
-  .clock-stint .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; font-weight: 600; }
-  .clock-stint .val { font-family: 'Oswald', sans-serif; font-size: 22px; font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
+/* when the buzzer has gone the board goes solid — readable at arm's length */
+.due-state .col.out { background: var(--off-fill); border-color: var(--off-fill); }
+.due-state .col.out .who, .due-state .col.out .col-head, .due-state .col.out .arrow { color: var(--off-ink); }
+.due-state .col.in { background: var(--on-fill); border-color: var(--on-fill); }
+.due-state .col.in .who, .due-state .col.in .col-head, .due-state .col.in .arrow { color: var(--on-ink); }
 
-  .progress-bar {
-    height: 4px;
-    background: var(--bg-2);
-    border-radius: 2px;
-    margin: 12px 0;
-    overflow: hidden;
-    position: relative;
-  }
-  .progress-bar .fill {
-    height: 100%;
-    background: var(--green);
-    transition: width 0.1s linear;
-  }
-  .progress-bar .halftime-tick {
-    position: absolute;
-    top: -2px; bottom: -2px;
-    width: 2px;
-    background: var(--amber);
-    left: 50%;
-  }
-  .time-scrubber {
-    margin: 10px 0 2px;
-  }
-  .time-scrubber input[type="range"] {
-    width: 100%;
-    accent-color: var(--green);
-  }
-  .time-scrubber-labels {
-    display: flex;
-    justify-content: space-between;
-    color: var(--dim);
-    font-size: 10px;
-    font-family: 'Oswald', sans-serif;
-    letter-spacing: 0.08em;
-    margin-top: 2px;
-  }
-  .time-jumps {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 8px;
-  }
-  .time-jumps .btn {
-    padding: 7px 8px;
-    font-size: 11px;
-    justify-content: center;
-  }
+.keeper-swap {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 9px 11px; border-radius: var(--r-md);
+  background: var(--gk-soft); color: var(--gk);
+  font-size: 15px;
+}
+.keeper-swap .nm { font-size: 17px; }
 
-  .game-status {
-    display: inline-block;
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.18em;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background: var(--green-bg);
-    color: var(--green-2);
-    border: 1px solid var(--green);
-    font-weight: 600;
-    margin-top: 8px;
-  }
-  .game-status.paused { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
-  .game-status.halftime { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
-  .game-status.fulltime { background: var(--red-bg); color: var(--red); border-color: var(--red); }
+/* ---- on-pitch strip ---- */
+.strip { display: flex; flex-direction: column; gap: 7px; }
+.strip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 6px 10px; border-radius: var(--r-md);
+  background: var(--sunk); border: 1px solid transparent;
+  font-size: 15px; font-weight: 700;
+  font-variation-settings: 'wdth' 94, 'wght' 720;
+}
+.chip .t {
+  font-size: 11px; font-variant-numeric: tabular-nums;
+  font-variation-settings: 'wdth' 108, 'wght' 600;
+  color: var(--ink-3);
+}
+.chip.pitch { background: var(--on-soft); color: var(--on); }
+.chip.pitch .t { color: var(--on); opacity: .75; }
+.chip.keeper { background: var(--gk-soft); color: var(--gk); }
+.chip.keeper .t { color: var(--gk); opacity: .75; }
+.chip.bench { background: var(--sunk); color: var(--ink-2); }
+.chip.gone { opacity: .45; text-decoration: line-through; }
+.chip.tapable:active { transform: scale(.96); }
+.chip.picked { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
 
-  .panel {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 14px;
-    margin-top: 14px;
-    text-align: left;
-  }
-  .panel-title {
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    color: var(--muted);
-    font-weight: 600;
-    margin: 0 0 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .panel-title .countdown {
-    font-family: 'Oswald', sans-serif;
-    color: var(--amber);
-    font-size: 14px;
-    font-variant-numeric: tabular-nums;
-  }
+/* ---- dock: everything you press mid-match lives in the thumb zone ---- */
+.dock {
+  display: flex; gap: 8px; padding: 10px var(--pad);
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line); background: var(--ground);
+}
+.btn {
+  border-radius: var(--r-md); min-height: var(--tap);
+  padding: 0 16px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 15px; font-weight: 750;
+  font-variation-settings: 'wdth' 106, 'wght' 750;
+  letter-spacing: .04em; text-transform: uppercase;
+  background: var(--raised); border: 1.5px solid var(--line);
+  transition: transform .09s ease, background .12s ease;
+}
+.btn:active { transform: scale(.975); }
+.btn:disabled { opacity: .38; pointer-events: none; }
+.btn.grow { flex: 1; min-width: 0; }
+.btn.square { width: var(--tap); padding: 0; flex: none; font-size: 19px; }
+.btn.go     { background: var(--on-fill);  color: var(--on-ink);  border-color: var(--on-fill); }
+.btn.warn   { background: var(--off-fill); color: var(--off-ink); border-color: var(--off-fill); }
+.btn.danger { background: transparent; color: var(--alert); border-color: var(--alert); }
+.btn.quiet  { background: transparent; color: var(--ink-2); }
+.btn.big { min-height: 62px; font-size: 19px; letter-spacing: .06em; }
+.btn.tall { min-height: 58px; }
 
-  .now-on {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-  .now-on .player-pill { font-size: 16px; padding: 8px 14px; }
+/* ---- generic surfaces ---- */
+.card {
+  background: var(--raised); border: 1px solid var(--line);
+  border-radius: var(--r-lg); padding: var(--pad);
+}
+.card + .card { margin-top: 12px; }
+.sec { margin-top: 20px; }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 9px; }
+.note { font-size: 13px; color: var(--ink-3); line-height: 1.5; }
+.hr { height: 1px; background: var(--line); margin: 14px 0; border: 0; }
 
-  .next-sub {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
-    align-items: center;
-    margin-top: 10px;
-  }
-  .sub-side .label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-  .sub-side.out .label { color: var(--red); }
-  .sub-side.in .label { color: var(--green-2); }
-  .sub-side .pills { display: flex; flex-wrap: wrap; gap: 4px; }
-  .sub-side .pills .player-pill { font-size: 13px; padding: 4px 8px; }
-  .sub-arrow {
-    font-size: 24px;
-    color: var(--dim);
-  }
+/* ---- roster tiles (attendance) ---- */
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.tile {
+  min-height: 62px; border-radius: var(--r-md);
+  border: 2px solid var(--line); background: var(--raised);
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  padding: 8px 10px; gap: 2px; text-align: left;
+  color: var(--ink-3); transition: transform .09s ease;
+}
+.tile:active { transform: scale(.97); }
+.tile .who { font-size: 16px; font-weight: 750; font-variation-settings: 'wdth' 90, 'wght' 750; overflow-wrap: anywhere; }
+.tile .meta { font-size: 10.5px; font-variation-settings: 'wdth' 115, 'wght' 650; letter-spacing: .12em; text-transform: uppercase; }
+.tile.in { border-color: var(--on); background: var(--on-soft); color: var(--on); }
+.tile.in .meta { color: var(--on); opacity: .8; }
+.tile.keeper { border-color: var(--gk); background: var(--gk-soft); color: var(--gk); }
+.tile.keeper .meta { color: var(--gk); opacity: .85; }
 
-  .next-sub-empty {
-    color: var(--dim);
-    font-style: italic;
-    text-align: center;
-    padding: 10px;
-    font-size: 14px;
-  }
+/* ---- stepper ---- */
+.steps { display: grid; gap: 8px; }
+.step { display: flex; align-items: center; gap: 10px; min-height: var(--tap); }
+.step .cap { flex: 1; min-width: 0; }
+.step .cap .t { font-size: 15px; font-weight: 700; font-variation-settings: 'wdth' 100, 'wght' 700; }
+.step .cap .s { font-size: 12px; color: var(--ink-3); }
+.step .ctl { display: flex; align-items: center; gap: 4px; }
+.step .ctl button {
+  width: 42px; height: 42px; border-radius: var(--r-sm);
+  background: var(--sunk); font-size: 20px; font-weight: 700;
+  display: grid; place-items: center;
+}
+.step .ctl button:active { background: var(--line); }
+.step .ctl .val {
+  min-width: 62px; text-align: center; font-size: 19px;
+  font-variant-numeric: tabular-nums; font-weight: 800;
+  font-variation-settings: 'wdth' 108, 'wght' 800;
+}
+.segs { display: flex; gap: 4px; background: var(--sunk); padding: 4px; border-radius: var(--r-md); }
+.segs button {
+  flex: 1; min-height: 42px; border-radius: var(--r-sm);
+  font-size: 14px; font-weight: 700; font-variation-settings: 'wdth' 104, 'wght' 700;
+  color: var(--ink-3);
+}
+.segs button.on { background: var(--ground); color: var(--ink); box-shadow: var(--shadow-1); }
 
-  /* Manual sub mode */
-  .manual-instructions {
-    background: var(--bg-3);
-    padding: 10px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 10px;
-    border-left: 3px solid var(--blue);
-  }
-  .swap-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .swap-list .player-pill {
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
-  }
-  .swap-list .player-pill.selected {
-    box-shadow: 0 0 0 2px var(--blue);
-    transform: scale(1.05);
-  }
-  .swap-section-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--muted);
-    margin: 8px 0 6px;
-    font-weight: 700;
-  }
+.switch { display: flex; align-items: center; gap: 12px; min-height: var(--tap); }
+.switch .cap { flex: 1; }
+.switch .track {
+  width: 50px; height: 30px; border-radius: 999px; flex: none;
+  background: var(--sunk); border: 1px solid var(--line); position: relative;
+  transition: background .16s ease, border-color .16s ease;
+}
+.switch .track::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%; background: var(--ink-3);
+  transition: transform .16s ease, background .16s ease;
+}
+.switch.on .track { background: var(--on-soft); border-color: var(--on); }
+.switch.on .track::after { transform: translateX(20px); background: var(--on-fill); }
 
-  /* Live totals */
-  .live-totals {
-    margin-top: 14px;
-  }
-  .live-totals .totals-grid { margin-top: 0; }
+/* ---- minutes bars ---- */
+.bars { display: flex; flex-direction: column; gap: 7px; }
+.bar-row { display: grid; grid-template-columns: minmax(64px, 88px) 1fr auto; gap: 10px; align-items: center; }
+.bar-row .who { font-size: 14px; font-weight: 720; font-variation-settings: 'wdth' 90, 'wght' 720; overflow-wrap: anywhere; }
+.bar-track { height: 20px; border-radius: var(--r-sm); background: var(--sunk); overflow: hidden; display: flex; }
+.bar-fill { background: var(--on-fill); height: 100%; }
+.bar-fill.gk { background: var(--gk-fill); }
+.bar-row .t { font-size: 13px; font-variant-numeric: tabular-nums; font-variation-settings: 'wdth' 108, 'wght' 700; min-width: 46px; text-align: right; }
+.bar-row.least .who { color: var(--on); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-3); }
+.legend i { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 
-  .score-panel {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
-    align-items: center;
-    margin-top: 14px;
-    padding: 12px;
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-  }
-  .score-team {
-    min-width: 0;
-  }
-  .score-team .label {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-weight: 700;
-  }
-  .score-team .value {
-    font-family: 'Oswald', sans-serif;
-    font-size: 34px;
-    line-height: 1;
-    color: var(--text);
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-  .score-divider {
-    color: var(--dim);
-    font-family: 'Oswald', sans-serif;
-    font-size: 28px;
-  }
-  .goal-button {
-    margin-top: 14px;
-    font-size: 22px;
-    letter-spacing: 0.12em;
-  }
-  .goal-picker {
-    display: grid;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .goal-picker .btn {
-    justify-content: center;
-  }
-  .goal-log {
-    display: grid;
-    gap: 6px;
-    margin-top: 10px;
-  }
-  .goal-log-item {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 6px 8px;
-    border-radius: 4px;
-    background: var(--bg-3);
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .goal-log-item strong { color: var(--text); }
-  .goal-log-actions {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-  }
-  .goal-log-actions .btn {
-    padding: 4px 7px;
-    font-size: 10px;
-  }
-  .recovery-panel,
-  .summary-panel {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 14px;
-    margin-bottom: 16px;
-  }
-  .summary-score {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 12px;
-    align-items: center;
-    margin: 10px 0 14px;
-  }
-  .summary-score .value {
-    font-family: 'Oswald', sans-serif;
-    font-size: 44px;
-    font-weight: 700;
-    color: var(--text);
-  }
-  .summary-score .label {
-    font-size: 10px;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-weight: 700;
-  }
+/* ---- sheet ---- */
+/* Sheets sit above the half-time curtain — the curtain has a button that
+   opens one. */
+.veil {
+  position: fixed; inset: 0; background: rgba(4,12,9,.55);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 80;
+  animation: fade .16s ease-out;
+}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+.sheet {
+  width: 100%; max-width: 620px; max-height: 88dvh;
+  background: var(--ground); border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: var(--sheet-shadow);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: rise .22s cubic-bezier(.2,.8,.3,1);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@keyframes rise { from { transform: translateY(14px); opacity: .6 } to { transform: none; opacity: 1 } }
+@media (prefers-reduced-motion: reduce) {
+  .veil, .sheet { animation: none; }
+}
+.sheet-head { display: flex; align-items: center; gap: 10px; padding: 14px var(--pad) 10px; }
+.sheet-head h2 { margin: 0; font-size: 18px; font-weight: 800; font-variation-settings: 'wdth' 108, 'wght' 800; letter-spacing: -.01em; flex: 1; }
+.sheet-body { overflow-y: auto; padding: 0 var(--pad) 14px; }
+.sheet-foot { padding: 10px var(--pad) 14px; border-top: 1px solid var(--line); }
+.grabber { width: 36px; height: 4px; border-radius: 2px; background: var(--line-hard); margin: 8px auto 0; }
 
-  /* Toast/banner overlay */
-  .banner {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    padding: 24px 16px;
-    text-align: center;
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-size: 24px;
-    font-weight: 700;
-    z-index: 100;
-    animation: slideDown 0.3s ease-out;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-  .banner.halftime {
-    background: var(--amber);
-    color: #1a1100;
-  }
-  .banner.fulltime {
-    background: var(--red);
-    color: #fff;
-  }
-  @keyframes slideDown {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
-  }
+/* ---- full-bleed break / full-time overlay ---- */
+.curtain {
+  position: fixed; inset: 0; z-index: 70; background: var(--ground);
+  display: flex; flex-direction: column;
+  padding: max(24px, env(safe-area-inset-top)) var(--pad) calc(16px + env(safe-area-inset-bottom));
+  animation: fade .18s ease-out;
+}
+.curtain .big-label { font-size: clamp(30px, 9vw, 46px); font-weight: 850; font-variation-settings: 'wdth' 116, 'wght' 850; letter-spacing: -.02em; line-height: 1; }
+.curtain .score-line { font-size: clamp(46px, 15vw, 78px); font-variant-numeric: tabular-nums; font-weight: 850; font-variation-settings: 'wdth' 112, 'wght' 850; line-height: 1; }
 
-  .help-note {
-    font-size: 12px;
-    color: var(--dim);
-    background: var(--bg-2);
-    padding: 10px 12px;
-    border-radius: 4px;
-    border-left: 3px solid var(--green);
-    margin-bottom: 14px;
-    line-height: 1.5;
-  }
+/* ---- inputs ---- */
+.input {
+  width: 100%; min-height: var(--tap); padding: 12px 14px;
+  background: var(--sunk); border: 1.5px solid var(--line);
+  border-radius: var(--r-md); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; font-weight: 650;
+}
+.input:focus { outline: none; border-color: var(--on-fill); }
+.row { display: flex; gap: 8px; }
+.row .input { flex: 1; }
 
-  .small-action-row {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-  }
-  .small-action-row .btn { font-size: 12px; padding: 8px 12px; flex: 1; }
+/* ---- toast ---- */
+.toast {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 90;
+  display: flex; align-items: center; gap: 12px;
+  background: var(--ink); color: var(--ground);
+  padding: 11px 14px; border-radius: var(--r-md);
+  font-size: 14px; font-weight: 700; box-shadow: var(--shadow-2);
+  max-width: calc(100% - 28px); animation: rise .18s ease-out;
+}
+.toast button { color: var(--on-fill); font-weight: 800; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; }
 
-  /* Modal */
-  .modal-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-    z-index: 200;
-  }
-  .modal {
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 400px;
-    width: 100%;
-  }
-  .modal h3 {
-    font-family: 'Oswald', sans-serif;
-    text-transform: uppercase;
-    margin: 0 0 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-  }
-  .modal p { color: var(--muted); font-size: 14px; margin: 8px 0 16px; }
-  .modal ul {
-    margin: 0 0 16px;
-    padding-left: 18px;
-    color: var(--muted);
-    font-size: 14px;
-    line-height: 1.55;
-  }
-  .modal li { margin-bottom: 6px; }
+.empty { text-align: center; color: var(--ink-3); font-size: 14px; padding: 22px 10px; line-height: 1.6; }
 
-  .footer-note {
-    font-size: 11px;
-    color: var(--dim);
-    text-align: center;
-    margin-top: 24px;
-    padding-top: 14px;
-    border-top: 1px solid var(--line);
-    line-height: 1.6;
-  }
+/* Landscape: put the board beside the clock rather than under it. */
+@media (orientation: landscape) and (max-height: 520px) {
+  #app { max-width: none; }
+  .match-body { display: grid; grid-template-columns: minmax(190px, 34%) 1fr; align-items: start; gap: 14px; }
+  .hero { grid-column: 1; }
+  .board { grid-column: 2; }
+  .strip { grid-column: 1 / -1; }
+  .hero .cd { font-size: clamp(44px, 10vw, 72px); }
+}
 </style>
 </head>
 <body>
-<div id="root"></div>
+<div id="app"></div>
+<div id="layer"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback, useMemo } = React;
+<script>
+"use strict";
+/* =====================================================================
+   PlayTime
+   A rotation clock for coaches who are also the referee, the timekeeper
+   and the parent of one of the players.
+   ===================================================================== */
 
-// Formatting helpers
-const fmtTime = (totalSec) => {
-  if (totalSec < 0) totalSec = 0;
-  const m = Math.floor(totalSec / 60);
-  const s = Math.floor(totalSec % 60);
-  return `${m}:${String(s).padStart(2, '0')}`;
-};
+/* ------------------------------ storage ---------------------------- */
+const KEY = 'playtime.v3';
+const LEGACY_CFG = 'soccer-rotation-v1';
+const LEGACY_LIVE = 'playtime-live-game-v1';
 
-const fmtMinutes = (mins) => {
-  if (!Number.isFinite(mins)) return '0';
-  return Number.isInteger(mins) ? String(mins) : String(Math.round(mins * 100) / 100);
-};
+const uid = () => Math.random().toString(36).slice(2, 9);
 
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
+function defaults() {
+  return {
+    v: 3,
+    roster: [],
+    lastSquad: [],
+    cfg: {
+      periods: 2,        // 2 halves or 4 quarters
+      periodMin: 20,
+      stintMin: 4,
+      onField: 4,        // includes the keeper when keepers are on
+      useGk: false,
+      gkEvery: 2,        // keeper changes every N stints
+      gkCounts: true,    // does time in goal count as playing time?
+      pauseAtSub: true,
+      sound: true,
+      haptics: true,
+      theme: 'auto',
+    },
+    game: null,
+  };
+}
 
-const STORAGE_KEY = 'soccer-rotation-v1';
-const LIVE_STORAGE_KEY = 'playtime-live-game-v1';
-const ONBOARDING_STORAGE_KEY = 'playtime-onboarding-seen-v1';
+/* Bring across a roster and settings from the old version rather than
+   making the coach retype eight five-year-olds' names. */
+function importLegacy(S) {
+  try {
+    const raw = localStorage.getItem(LEGACY_CFG);
+    if (!raw) return S;
+    const old = JSON.parse(raw);
+    if (!Array.isArray(old.players) || !old.players.length) return S;
+    const keepers = old.goalkeeperNames || [];
+    S.roster = old.players.map(n => ({ id: uid(), name: String(n), gk: keepers.includes(n) }));
+    S.lastSquad = S.roster.map(p => p.id);
+    const gl = Number(old.gameLength) || 40;
+    S.cfg.periods = 2;
+    S.cfg.periodMin = Math.max(1, Math.round(gl / 2));
+    S.cfg.stintMin = Math.max(1, Math.round(Number(old.stintLength) || 4));
+    S.cfg.onField = Math.max(1, Number(old.numOnField) || 4);
+    S.cfg.useGk = !!old.hasGoalkeeper;
+    S.cfg.gkEvery = Math.max(1, Number(old.goalkeeperBlockStints) || 2);
+    localStorage.removeItem(LEGACY_LIVE);
+  } catch (e) { /* a bad legacy blob is not worth a broken app */ }
+  return S;
+}
 
-// Rotation planning
-function computeRotation(playerNames, K, numStints) {
-  const N = playerNames.length;
-  if (N === 0 || K === 0 || numStints === 0) {
-    return { stints: [], totalsByPlayer: {} };
-  }
-  if (N <= K) {
-    const stints = [];
-    for (let s = 0; s < numStints; s++) {
-      stints.push({
-        idx: s,
-        onField: [...playerNames],
-        offField: [],
-        subOut: [],
-        subIn: [],
-      });
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      const merged = Object.assign(defaults(), s, { cfg: Object.assign(defaults().cfg, s.cfg || {}) });
+      if (merged.game && !merged.game.hist) merged.game.hist = [];
+      return merged;
     }
-    const totals = {};
-    playerNames.forEach(p => totals[p] = numStints);
-    return { stints, totalsByPlayer: totals };
-  }
-
-  const stintsPlayed = {};
-  const lastAnchored = {};
-  const origOrder = {};
-  playerNames.forEach((p, i) => {
-    stintsPlayed[p] = 0;
-    lastAnchored[p] = -1000;
-    origOrder[p] = i;
-  });
-
-  let onField = playerNames.slice(0, K);
-  let bench = playerNames.slice(K);
-  onField.forEach(p => stintsPlayed[p]++);
-
-  const stints = [{
-    idx: 0,
-    onField: [...onField],
-    offField: [...bench],
-    subOut: [],
-    subIn: [],
-  }];
-
-  for (let s = 1; s < numStints; s++) {
-    const numAnchors = Math.max(0, 2 * K - N);
-    const numSubs = K - numAnchors;
-
-    const onFieldSorted = [...onField].sort((a, b) => {
-      if (stintsPlayed[a] !== stintsPlayed[b]) return stintsPlayed[a] - stintsPlayed[b];
-      if (lastAnchored[a] !== lastAnchored[b]) return lastAnchored[a] - lastAnchored[b];
-      return origOrder[a] - origOrder[b];
-    });
-    const anchors = onFieldSorted.slice(0, numAnchors);
-    anchors.forEach(p => lastAnchored[p] = s);
-    const goingOff = onField.filter(p => !anchors.includes(p));
-
-    const benchSorted = [...bench].sort((a, b) => {
-      if (stintsPlayed[a] !== stintsPlayed[b]) return stintsPlayed[a] - stintsPlayed[b];
-      return origOrder[a] - origOrder[b];
-    });
-    const comingOn = benchSorted.slice(0, numSubs);
-    const stayingBench = benchSorted.slice(numSubs);
-
-    const newOnField = [...anchors, ...comingOn];
-    const newBench = [...stayingBench, ...goingOff];
-
-    newOnField.forEach(p => stintsPlayed[p]++);
-
-    stints.push({
-      idx: s,
-      onField: [...newOnField].sort((a, b) => origOrder[a] - origOrder[b]),
-      offField: [...newBench].sort((a, b) => origOrder[a] - origOrder[b]),
-      subOut: goingOff,
-      subIn: comingOn,
-    });
-
-    onField = newOnField;
-    bench = newBench;
-  }
-
-  return { stints, totalsByPlayer: { ...stintsPlayed } };
+  } catch (e) { /* fall through to a clean slate */ }
+  return importLegacy(defaults());
 }
 
-function getGoalkeeperPlayers(config) {
-  if (!config.hasGoalkeeper) return [];
-  const selected = config.goalkeeperNames || config.players;
-  return config.players.filter(p => selected.includes(p));
+let S = load();
+let saveTimer = null;
+function save(now) {
+  clearTimeout(saveTimer);
+  const write = () => {
+    try {
+      syncClock();
+      S.savedAt = Date.now();
+      // undo history is deliberately not persisted — it is worth a dozen
+      // deep copies in memory, not in localStorage
+      localStorage.setItem(KEY, JSON.stringify(S, (k, v) => (k === 'hist' ? undefined : v)));
+    } catch (e) {}
+  };
+  if (now) write(); else saveTimer = setTimeout(write, 250);
 }
 
-function getGoalkeeperSchedule(config, numStints, avoidFirst = []) {
-  if (!config.hasGoalkeeper) return Array(numStints).fill(null);
-  let keepers = getGoalkeeperPlayers(config);
-  if (keepers.length === 0) return Array(numStints).fill(null);
+/* ------------------------------ helpers ---------------------------- */
+const byId = (id) => S.roster.find(p => p.id === id);
+const nameOf = (id) => (byId(id) || {}).name || '—';
+/* Tie-break order. Within a match it is frozen per game so "shuffle"
+   can produce a different-but-equally-fair XI without reordering the
+   coach's team list for ever. */
+function orderOf(id) {
+  const t = S.game && S.game.tieOrder;
+  if (t) { const i = t.indexOf(id); if (i >= 0) return i; }
+  const i = S.roster.findIndex(p => p.id === id);
+  return i < 0 ? 999 : i;
+}
 
-  const manualStarter = config.startersMode === 'manual' && config.startingGoalkeeper && keepers.includes(config.startingGoalkeeper)
-    ? config.startingGoalkeeper
-    : null;
-  const firstPreferred = manualStarter || keepers.find(p => !avoidFirst.includes(p));
-  if (firstPreferred) {
-    keepers = [firstPreferred, ...keepers.filter(p => p !== firstPreferred)];
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+
+function mmss(ms) {
+  const t = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+}
+function mins(ms) { return Math.round(ms / 60000); }
+function minsPrecise(ms) {
+  const t = Math.max(0, Math.round(ms / 1000));
+  return Math.floor(t / 60) + 'm ' + String(t % 60).padStart(2, '0') + 's';
+}
+const periodName = (n, total) => total === 4 ? 'Q' + n : (n === 1 ? '1ST' : '2ND');
+const periodLong = (n, total) => total === 4
+  ? ['1st quarter', '2nd quarter', '3rd quarter', '4th quarter'][n - 1]
+  : (n === 1 ? '1st half' : '2nd half');
+const breakName = (n, total) => (total === 2 && n === 1) ? 'Half time' : 'End of ' + periodLong(n, total);
+
+/* ======================================================================
+   The rotation planner. Pure functions only — no DOM, no module state,
+   everything passed in. test/logic.test.mjs lifts the code between these
+   two markers straight out of this file and exercises it, so the tests
+   can never drift from what actually ships.
+   ====================================================================== */
+//#region logic
+
+function stintsPerPeriod(cfg) {
+  return Math.max(1, Math.round(cfg.periodMin / Math.max(0.5, cfg.stintMin)));
+}
+function stintMs(cfg) {
+  return (cfg.periodMin * 60000) / stintsPerPeriod(cfg);
+}
+function periodMs(cfg) {
+  return cfg.periodMin * 60000;
+}
+/* Boundary that ends the given stint index (0-based) within a period. */
+function boundaryMs(cfg, stint) {
+  return Math.min(periodMs(cfg), (stint + 1) * stintMs(cfg));
+}
+function globalStint(cfg, period, stint) {
+  return (period - 1) * stintsPerPeriod(cfg) + stint;
+}
+
+function onPitch(g) {
+  return g.gk ? [g.gk, ...g.field] : g.field.slice();
+}
+
+/* Live playing time, including the stint in progress. */
+function playedNow(g, id) {
+  const live = (g.state === 'live' && onPitch(g).includes(id)) ? (g.clockMs - g.segStart) : 0;
+  return (g.played[id] || 0) + Math.max(0, live);
+}
+
+/* Who keeps goal for this block? Least time in goal wins; among equals,
+   whoever has played least overall, so the gloves spread out too. */
+function pickKeeper(eligible, ctx, avoid) {
+  const pool = eligible.filter(p => p !== avoid);
+  const from = pool.length ? pool : eligible;
+  return from.slice().sort((a, b) =>
+    (ctx.gkMs[a] || 0) - (ctx.gkMs[b] || 0) ||
+    (ctx.fair[a] || 0) - (ctx.fair[b] || 0) ||
+    ctx.order(a) - ctx.order(b)
+  )[0] || null;
+}
+
+/* The whole fairness engine: put the N children who have played least on
+   the field. Ties break toward whoever is currently sitting, then toward
+   whoever has been sitting longest. Because the ones coming on are by
+   definition the least-played, they will not be picked to come straight
+   off again — the rule is self-stabilising, and it self-corrects after
+   any manual swap, late arrival or early departure. */
+function pickField(candidates, n, ctx) {
+  const on = new Set(ctx.onPitch);
+  return candidates.slice().sort((a, b) =>
+    (ctx.fair[a] || 0) - (ctx.fair[b] || 0) ||
+    (on.has(a) ? 1 : 0) - (on.has(b) ? 1 : 0) ||
+    (ctx.lastOff[a] || 0) - (ctx.lastOff[b] || 0) ||
+    ctx.order(a) - ctx.order(b)
+  ).slice(0, Math.max(0, n));
+}
+
+/* Work out the lineup for the stint after the current one.
+   `ctx.fair` should already be projected forward to the boundary so the
+   answer does not wobble as the current stint ticks away. */
+function planNext(ctx, cfg, opts) {
+  const avail = ctx.avail;
+  const keepers = ctx.keepers.filter(p => avail.includes(p));
+  const useGk = cfg.useGk && keepers.length > 0 && avail.length > 1;
+
+  let gk = null;
+  if (useGk) {
+    const every = Math.max(1, cfg.gkEvery);
+    const sameBlock = opts.prevGlobal != null &&
+      Math.floor(opts.nextGlobal / every) === Math.floor(opts.prevGlobal / every);
+    gk = (sameBlock && ctx.gk && avail.includes(ctx.gk))
+      ? ctx.gk
+      : pickKeeper(keepers, ctx, ctx.gk);
   }
 
-  const blockStints = Math.max(1, parseInt(config.goalkeeperBlockStints, 10) || 1);
-  return Array.from({ length: numStints }, (_, i) => keepers[Math.floor(i / blockStints) % keepers.length]);
+  const slots = Math.max(0, cfg.onField - (gk ? 1 : 0));
+  const candidates = avail.filter(p => p !== gk);
+  const field = pickField(candidates, Math.min(slots, candidates.length), ctx);
+
+  const before = new Set(ctx.onPitch);
+  const after = new Set(gk ? [gk, ...field] : field);
+  return {
+    gk,
+    field: field.slice().sort((a, b) => ctx.order(a) - ctx.order(b)),
+    out: [...before].filter(p => !after.has(p)).sort((a, b) => ctx.order(a) - ctx.order(b)),
+    in: [...after].filter(p => !before.has(p)).sort((a, b) => ctx.order(a) - ctx.order(b)),
+    gkFrom: ctx.gk || null,
+    gkTo: gk,
+  };
 }
 
-function computeRotationWithGoalkeepers(playerNames, K, numStints, goalkeeperSchedule) {
-  if (!goalkeeperSchedule || goalkeeperSchedule.every(gk => !gk)) {
-    return computeRotation(playerNames, K, numStints);
+/* Look the whole rest of the match forward, so the lineup screen can
+   promise everyone roughly equal minutes before a ball is kicked. */
+function project(g, cfg, roster, orderFn) {
+  const spp = stintsPerPeriod(cfg);
+  const sms = stintMs(cfg);
+  const order = orderFn || ((id) => { const i = roster.findIndex(p => p.id === id); return i < 0 ? 999 : i; });
+  const keepers = roster.filter(p => p.gk).map(p => p.id);
+  const avail = g.squad.filter(id => !g.out.includes(id));
+
+  const sim = {
+    played: Object.assign({}, g.played),
+    gkMs: Object.assign({}, g.gkMs),
+    lastOff: Object.assign({}, g.lastOff),
+    field: g.field.slice(),
+    gk: g.gk,
+  };
+  const stints = [];
+  let period = g.period;
+  let stint = g.stint;
+  let elapsedIntoStint = Math.max(0, g.clockMs - g.segStart);
+  let firstIsCurrent = g.state === 'live' || g.state === 'break';
+
+  // if the match has not started, seed stint 0 from the pending lineup
+  if (g.state === 'pre') {
+    const p0 = g.pending;
+    if (p0) { sim.field = p0.field.slice(); sim.gk = p0.gk; }
+    firstIsCurrent = true;
+    elapsedIntoStint = 0;
+  }
+
+  const total = cfg.periods * spp;
+  let guard = 0;
+  while (guard++ < 200) {
+    const gStint = globalStint(cfg, period, stint);
+    if (gStint >= total) break;
+
+    const dur = firstIsCurrent ? Math.max(0, sms - elapsedIntoStint) : sms;
+    firstIsCurrent = false;
+
+    const pitch = sim.gk ? [sim.gk, ...sim.field] : sim.field.slice();
+    pitch.forEach(id => { sim.played[id] = (sim.played[id] || 0) + dur; });
+    if (sim.gk) sim.gkMs[sim.gk] = (sim.gkMs[sim.gk] || 0) + dur;
+
+    stints.push({ period, stint, gk: sim.gk, field: sim.field.slice() });
+
+    // advance
+    let nPeriod = period, nStint = stint + 1;
+    if (nStint >= spp) { nPeriod = period + 1; nStint = 0; }
+    if (globalStint(cfg, nPeriod, nStint) >= total) break;
+
+    const fair = {};
+    avail.forEach(id => {
+      fair[id] = cfg.gkCounts ? (sim.played[id] || 0) : (sim.played[id] || 0) - (sim.gkMs[id] || 0);
+    });
+    const next = planNext({
+      avail, keepers, gk: sim.gk, onPitch: pitch,
+      fair, gkMs: sim.gkMs, lastOff: sim.lastOff, order,
+    }, cfg, {
+      prevGlobal: gStint,
+      nextGlobal: globalStint(cfg, nPeriod, nStint),
+    });
+    next.out.forEach(id => { sim.lastOff[id] = gStint; });
+    sim.field = next.field; sim.gk = next.gk;
+    period = nPeriod; stint = nStint;
   }
 
   const totals = {};
-  const goalkeeperTotals = {};
-  const lastAnchored = {};
-  const origOrder = {};
-  playerNames.forEach((p, i) => {
-    totals[p] = 0;
-    goalkeeperTotals[p] = 0;
-    lastAnchored[p] = -1000;
-    origOrder[p] = i;
-  });
-
-  const stints = [];
-  let onField = [];
-  let bench = [...playerNames];
-
-  for (let s = 0; s < numStints; s++) {
-    const goalkeeper = goalkeeperSchedule[s];
-    const previousGoalkeeper = s > 0 ? goalkeeperSchedule[s - 1] : null;
-    const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== goalkeeper
-      ? previousGoalkeeper
-      : null;
-    if (goalkeeper && goalkeeperTotals[goalkeeper] !== undefined) goalkeeperTotals[goalkeeper]++;
-
-    const eligible = playerNames.filter(p => p !== goalkeeper && p !== restingGoalkeeper);
-    onField = onField.filter(p => eligible.includes(p));
-    bench = eligible.filter(p => !onField.includes(p));
-
-    const effectiveK = Math.min(K, eligible.length);
-    let newOn;
-    let newOff;
-
-    if (s === 0 || onField.length === 0) {
-      newOn = eligible.slice(0, effectiveK);
-      newOff = eligible.filter(p => !newOn.includes(p));
-    } else if (eligible.length <= effectiveK) {
-      newOn = [...eligible];
-      newOff = [];
-    } else {
-      const N = eligible.length;
-      const numAnchors = Math.max(0, 2 * effectiveK - N);
-      const numSubs = effectiveK - numAnchors;
-      const onFieldSorted = [...onField].sort((a, b) => {
-        if (totals[a] !== totals[b]) return totals[a] - totals[b];
-        if (lastAnchored[a] !== lastAnchored[b]) return lastAnchored[a] - lastAnchored[b];
-        return (origOrder[a] ?? 999) - (origOrder[b] ?? 999);
-      });
-      const anchors = onFieldSorted.slice(0, numAnchors);
-      anchors.forEach(p => lastAnchored[p] = s);
-      const goingOff = onField.filter(p => !anchors.includes(p));
-      const benchSorted = bench.sort((a, b) => {
-        if (totals[a] !== totals[b]) return totals[a] - totals[b];
-        return (origOrder[a] ?? 999) - (origOrder[b] ?? 999);
-      });
-      const comingOn = benchSorted.slice(0, numSubs);
-      const stayingBench = benchSorted.slice(numSubs);
-      newOn = [...anchors, ...comingOn];
-      newOff = [...stayingBench, ...goingOff];
-    }
-
-    if (restingGoalkeeper) newOff = [...newOff, restingGoalkeeper];
-    newOn.forEach(p => totals[p] = (totals[p] || 0) + 1);
-    const prevOn = stints[s - 1]?.onField || [];
-    stints.push({
-      idx: s,
-      goalkeeper,
-      onField: [...newOn].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-      offField: [...newOff].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-      subOut: prevOn.filter(p => !newOn.includes(p)),
-      subIn: newOn.filter(p => !prevOn.includes(p)),
-    });
-    onField = newOn;
-    bench = newOff;
-  }
-
-  return { stints, totalsByPlayer: totals, goalkeeperTotals };
+  avail.forEach(id => { totals[id] = sim.played[id] || 0; });
+  return { stints, totals, gkTotals: sim.gkMs };
 }
 
-// Audio chimes
-function makeChimer() {
-  let ctx = null;
-  const ensure = () => {
-    if (!ctx) {
-      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); }
-      catch (e) { return null; }
+//#endregion logic
+
+/* ------------------------- game construction ----------------------- */
+function newGame(squad) {
+  const g = {
+    squad: squad.slice(),
+    out: [],
+    state: 'pre',
+    period: 1,
+    clockMs: 0,
+    running: false,
+    runFrom: null,
+    runBase: 0,
+    stint: 0,
+    segStart: 0,
+    field: [],
+    gk: null,
+    played: {},
+    gkMs: {},
+    lastOff: {},
+    pending: null,
+    due: false,
+    goals: [],
+    hist: [],
+    tieOrder: squad.slice(),
+    startedAt: Date.now(),
+  };
+  squad.forEach(id => { g.played[id] = 0; g.gkMs[id] = 0; g.lastOff[id] = 0; });
+  g.pending = computePending(g, true);
+  return g;
+}
+
+function ctxFor(g, projectToBoundary) {
+  const avail = g.squad.filter(id => !g.out.includes(id));
+  const pitch = onPitch(g);
+  const remaining = projectToBoundary
+    ? Math.max(0, boundaryMs(S.cfg, g.stint) - Math.max(g.segStart, g.clockMs))
+    : 0;
+  const fair = {};
+  avail.forEach(id => {
+    let v = playedNow(g, id) + (pitch.includes(id) ? remaining : 0);
+    if (!S.cfg.gkCounts) v -= (g.gkMs[id] || 0);
+    fair[id] = v;
+  });
+  return {
+    avail,
+    keepers: S.roster.filter(p => p.gk).map(p => p.id),
+    gk: g.gk,
+    onPitch: pitch,
+    fair,
+    gkMs: g.gkMs,
+    lastOff: g.lastOff,
+    order: orderOf,
+  };
+}
+
+/* The starting lineup, or the lineup for the stint after this one. */
+function computePending(g, isStart) {
+  const spp = stintsPerPeriod(S.cfg);
+  if (isStart) {
+    const ctx = ctxFor(g, false);
+    ctx.onPitch = [];
+    return planNext(ctx, S.cfg, { prevGlobal: null, nextGlobal: 0 });
+  }
+  let nPeriod = g.period, nStint = g.stint + 1;
+  if (nStint >= spp) { nPeriod += 1; nStint = 0; }
+  if (nPeriod > S.cfg.periods) return null;
+  return planNext(ctxFor(g, true), S.cfg, {
+    prevGlobal: globalStint(S.cfg, g.period, g.stint),
+    nextGlobal: globalStint(S.cfg, nPeriod, nStint),
+  });
+}
+
+/* Bank the time everyone on the pitch has just played. */
+function commit(g) {
+  const dt = Math.max(0, g.clockMs - g.segStart);
+  if (dt > 0) {
+    onPitch(g).forEach(id => { g.played[id] = (g.played[id] || 0) + dt; });
+    if (g.gk) g.gkMs[g.gk] = (g.gkMs[g.gk] || 0) + dt;
+  }
+  g.segStart = g.clockMs;
+}
+
+function snapshot(g) {
+  const rest = Object.assign({}, g);
+  delete rest.hist;
+  g.hist.push(JSON.parse(JSON.stringify(rest)));
+  if (g.hist.length > 12) g.hist.shift();
+}
+
+/* Undo rolls back the decision, not the clock. The match kept going while
+   the coach worked out that they had tapped the wrong name, so the time
+   since then belongs to whoever the undo puts back on the pitch. */
+function undo() {
+  const g = S.game;
+  if (!g || !g.hist.length) return false;
+  const h = g.hist.pop();
+  const hist = g.hist;
+  const keepClock = h.period === g.period;
+  const live = { clockMs: g.clockMs, running: g.running, runFrom: g.runFrom, runBase: g.runBase };
+  S.game = Object.assign(h, { hist });
+  if (keepClock) Object.assign(S.game, live);
+  if (S.game.running) { S.game.runFrom = Date.now(); S.game.runBase = S.game.clockMs; }
+  S.game.pending = computePending(S.game, S.game.state === 'pre');
+  save(); render();
+  return true;
+}
+
+/* --------------------------- clock control ------------------------- */
+function startClock() {
+  const g = S.game; if (!g) return;
+  if (g.state === 'pre') {
+    // put the starting lineup on the pitch
+    const p = g.pending || computePending(g, true);
+    g.field = p.field.slice(); g.gk = p.gk;
+    g.state = 'live'; g.segStart = 0;
+    g.pending = computePending(g, false);
+  }
+  g.running = true;
+  g.runFrom = Date.now();
+  g.runBase = g.clockMs;
+  horn.unlock();
+  wake.on();
+  save(); render();
+}
+function pauseClock() {
+  const g = S.game; if (!g || !g.running) return;
+  syncClock();
+  g.running = false; g.runFrom = null;
+  wake.off();
+  save(); render();
+}
+function syncClock() {
+  const g = S.game;
+  if (!g || !g.running || g.runFrom == null) return;
+  g.clockMs = Math.min(periodMs(S.cfg), g.runBase + (Date.now() - g.runFrom));
+}
+/* Nudging the clock corrects the timer, nothing else. The current shift
+   slides along with it, so everyone's minutes read exactly the same
+   before and after — banking them first would credit the rewound
+   seconds twice. The stint counter stays where the real subs happened. */
+function setClock(ms) {
+  const g = S.game; if (!g) return;
+  syncClock();
+  snapshot(g);
+  const next = clamp(ms, 0, periodMs(S.cfg));
+  const delta = next - g.clockMs;
+  g.clockMs = next;
+  g.segStart = clamp(g.segStart + delta, 0, next);
+  g.runBase = g.clockMs; g.runFrom = Date.now();
+  g.due = false;
+  g.pending = computePending(g, false);
+  save(); render();
+}
+
+/* --------------------------- the sub loop -------------------------- */
+function raiseDue(endOfPeriod) {
+  const g = S.game;
+  g.due = true;
+  if (S.cfg.pauseAtSub && g.running) { syncClock(); g.running = false; g.runFrom = null; wake.off(); }
+  if (endOfPeriod) {
+    commit(g);
+    g.state = (g.period >= S.cfg.periods) ? 'ft' : 'break';
+    g.running = false; g.runFrom = null; wake.off();
+    if (g.state === 'ft') { horn.fullTime(); buzz([220, 90, 220, 90, 420]); }
+    else { horn.periodEnd(); buzz([200, 100, 200, 100, 200]); }
+  } else {
+    horn.subDue(); buzz([180, 90, 180]);
+  }
+  save(); render();
+}
+
+/* Apply the lineup the coach has been looking at, and start the next stint. */
+function applySubs() {
+  const g = S.game; if (!g) return;
+  snapshot(g);
+  commit(g);
+  const p = g.pending || computePending(g, false);
+  if (p) {
+    const before = new Set(onPitch(g));
+    g.field = p.field.slice();
+    g.gk = p.gk;
+    const after = new Set(onPitch(g));
+    before.forEach(id => { if (!after.has(id)) g.lastOff[id] = globalStint(S.cfg, g.period, g.stint); });
+  }
+  g.stint = Math.min(g.stint + 1, stintsPerPeriod(S.cfg) - 1);
+  g.due = false;
+  g.pending = computePending(g, false);
+  if (S.cfg.pauseAtSub) { g.running = true; g.runFrom = Date.now(); g.runBase = g.clockMs; wake.on(); }
+  toast('Subs made', 'Undo', undo);
+  save(); render();
+}
+
+function startNextPeriod() {
+  const g = S.game; if (!g) return;
+  snapshot(g);
+  commit(g);
+  const p = g.pending || computePending(g, false);
+  if (p) {
+    const before = new Set(onPitch(g));
+    g.field = p.field.slice(); g.gk = p.gk;
+    const after = new Set(onPitch(g));
+    before.forEach(id => { if (!after.has(id)) g.lastOff[id] = globalStint(S.cfg, g.period, g.stint); });
+  }
+  g.period += 1;
+  g.stint = 0;
+  g.clockMs = 0; g.segStart = 0;
+  g.state = 'live'; g.due = false;
+  g.running = true; g.runFrom = Date.now(); g.runBase = 0;
+  g.pending = computePending(g, false);
+  wake.on(); horn.unlock();
+  save(); render();
+}
+
+function endMatch() {
+  const g = S.game; if (!g) return;
+  syncClock(); commit(g);
+  g.state = 'ft'; g.running = false; g.runFrom = null; g.due = false;
+  wake.off(); save(); render();
+}
+
+/* A manual swap: two taps, then everything downstream is replanned from
+   the new truth. */
+function swap(a, b) {
+  const g = S.game; if (!g) return;
+  const isGk = (id) => g.gk === id;
+  const onF = (id) => g.field.includes(id);
+  // two on the bench, or two in the same outfield role: nothing to swap
+  if (!isGk(a) && !isGk(b) && onF(a) === onF(b)) return;
+
+  snapshot(g); commit(g);
+
+  if (isGk(a) || isGk(b)) {
+    const other = isGk(a) ? b : a;
+    const oldGk = g.gk;
+    g.gk = other;
+    if (onF(other)) g.field = g.field.map(p => p === other ? oldGk : p);
+    else g.field = g.field.slice(); // other came from the bench; old keeper sits
+    if (!onF(other) && oldGk) g.lastOff[oldGk] = globalStint(S.cfg, g.period, g.stint);
+  } else if (onF(a) !== onF(b)) {
+    const onId = onF(a) ? a : b;
+    const offId = onF(a) ? b : a;
+    g.field = g.field.map(p => p === onId ? offId : p);
+    g.lastOff[onId] = globalStint(S.cfg, g.period, g.stint);
+  }
+  g.pending = computePending(g, false);
+  save(); render();
+}
+
+function setAvailable(id, available) {
+  const g = S.game; if (!g) return;
+  snapshot(g); commit(g);
+  if (available) {
+    g.out = g.out.filter(x => x !== id);
+    if (!g.squad.includes(id)) g.squad.push(id);
+    if (g.played[id] == null) { g.played[id] = 0; g.gkMs[id] = 0; g.lastOff[id] = 0; }
+  } else {
+    if (!g.out.includes(id)) g.out.push(id);
+    g.field = g.field.filter(x => x !== id);
+    if (g.gk === id) {
+      const ctx = ctxFor(g, false);
+      const keepers = ctx.keepers.filter(p => ctx.avail.includes(p));
+      g.gk = keepers.length ? pickKeeper(keepers, ctx, id) : null;
+      g.field = g.field.filter(x => x !== g.gk);
     }
+    // backfill the empty shirt from the bench
+    const slots = Math.max(0, S.cfg.onField - (g.gk ? 1 : 0));
+    if (g.field.length < slots) {
+      const ctx = ctxFor(g, false);
+      const bench = ctx.avail.filter(x => !onPitch(g).includes(x));
+      const add = pickField(bench, slots - g.field.length, ctx);
+      g.field = g.field.concat(add);
+    }
+  }
+  g.pending = computePending(g, false);
+  save(); render();
+}
+
+/* ------------------------------- goals ----------------------------- */
+function addGoal(us, pid) {
+  const g = S.game; if (!g) return;
+  snapshot(g);
+  g.goals.push({ id: uid(), us, pid: pid || null, period: g.period, ms: g.clockMs, at: Date.now() });
+  buzz(us ? [40, 60, 40] : [70]);
+  if (us) horn.goal();
+  save(); render();
+  toast(us ? (pid ? nameOf(pid) + ' scores' : 'Goal for us') : 'Goal against', 'Undo', undo);
+}
+function removeGoal(id) {
+  const g = S.game; if (!g) return;
+  snapshot(g);
+  g.goals = g.goals.filter(x => x.id !== id);
+  save(); render();
+}
+function score(g) {
+  return g.goals.reduce((a, x) => (x.us ? a.us++ : a.them++, a), { us: 0, them: 0 });
+}
+
+/* ------------------------- sound & vibration ----------------------- */
+/* A sine chime does not survive a field full of five-year-olds. These
+   are square-wave blasts with a touch of detune for carry. */
+const horn = (() => {
+  let ctx = null;
+  const ac = () => {
+    if (!ctx) { try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
     if (ctx.state === 'suspended') ctx.resume();
     return ctx;
   };
-  const beep = (freq, dur, delay = 0, type = 'sine', vol = 0.35) => {
-    const c = ensure();
-    if (!c) return;
-    const start = c.currentTime + delay;
-    const osc = c.createOscillator();
+  const blast = (freq, dur, at, vol) => {
+    if (!S.cfg.sound) return;
+    const c = ac(); if (!c) return;
+    const t0 = c.currentTime + at;
     const gain = c.createGain();
-    osc.type = type;
-    osc.frequency.value = freq;
-    osc.connect(gain);
     gain.connect(c.destination);
-    gain.gain.setValueAtTime(0, start);
-    gain.gain.linearRampToValueAtTime(vol, start + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    osc.start(start);
-    osc.stop(start + dur + 0.05);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol, t0 + 0.012);
+    gain.gain.setValueAtTime(vol, t0 + dur - 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0005, t0 + dur);
+    [0, 3.5].forEach((detune, i) => {
+      const o = c.createOscillator();
+      o.type = i ? 'sawtooth' : 'square';
+      o.frequency.value = freq;
+      o.detune.value = detune;
+      o.connect(gain);
+      o.start(t0); o.stop(t0 + dur + 0.02);
+    });
   };
   return {
-    unlock: () => { ensure(); },
-    stintEnd: () => {
-      beep(880, 0.18, 0, 'sine');
-      beep(880, 0.18, 0.22, 'sine');
-    },
-    halftimeWarning: () => {
-      beep(660, 0.14, 0, 'triangle');
-      beep(660, 0.14, 0.2, 'triangle');
-      beep(660, 0.14, 0.4, 'triangle');
-    },
-    halftime: () => {
-      beep(523.25, 0.32, 0, 'sine', 0.4);   // C5
-      beep(659.25, 0.32, 0.32, 'sine', 0.4); // E5
-      beep(783.99, 0.55, 0.64, 'sine', 0.4); // G5
-    },
-    fullTime: () => {
-      beep(523.25, 0.25, 0, 'sine', 0.4);
-      beep(659.25, 0.25, 0.25, 'sine', 0.4);
-      beep(783.99, 0.25, 0.5, 'sine', 0.4);
-      beep(1046.5, 0.25, 0.75, 'sine', 0.4);
-      beep(1046.5, 0.7, 1.05, 'sine', 0.4);
-    },
+    unlock() { ac(); },
+    subDue() { blast(494, .34, 0, .38); blast(370, .46, .40, .38); },
+    periodEnd() { blast(440, .28, 0, .4); blast(440, .28, .34, .4); blast(330, .7, .68, .4); },
+    fullTime() { [0, .26, .52].forEach(t => blast(392, .2, t, .4)); blast(262, 1.0, .82, .42); },
+    goal() { [523, 659, 784].forEach((f, i) => blast(f, .16, i * .13, .3)); },
   };
+})();
+
+function buzz(pattern) {
+  if (!S.cfg.haptics) return;
+  try { navigator.vibrate && navigator.vibrate(pattern); } catch (e) {}
 }
 
-// Setup
-function SetupScreen({ config, setConfig, onGenerate }) {
-  const [newName, setNewName] = useState('');
-  const inputRef = useRef(null);
-
-  const addPlayer = () => {
-    const trimmed = newName.trim();
-    if (!trimmed) return;
-    if (config.players.some(p => p.toLowerCase() === trimmed.toLowerCase())) return;
-    setConfig({
-      ...config,
-      players: [...config.players, trimmed],
-      goalkeeperNames: [...(config.goalkeeperNames || []), trimmed],
-    });
-    setNewName('');
-    inputRef.current?.focus();
+const wake = (() => {
+  let lock = null;
+  return {
+    async on() {
+      try { if ('wakeLock' in navigator) lock = await navigator.wakeLock.request('screen'); } catch (e) {}
+    },
+    off() { try { lock && lock.release(); } catch (e) {} lock = null; },
+    reacquire() { if (S.game && S.game.running) this.on(); },
   };
+})();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') { wake.reacquire(); tick(); }
+  else save(true);
+});
+window.addEventListener('pagehide', () => save(true));
 
-  const removePlayer = (name) => {
-    setConfig({
-      ...config,
-      players: config.players.filter(p => p !== name),
-      goalkeeperName: config.goalkeeperName === name ? '' : config.goalkeeperName,
-      goalkeeperNames: (config.goalkeeperNames || []).filter(p => p !== name),
-      startingGoalkeeper: config.startingGoalkeeper === name ? '' : config.startingGoalkeeper,
-      chosenStarters: config.chosenStarters.filter(p => p !== name),
-    });
+/* --------------------------- tiny renderer -------------------------- */
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) for (const k in props) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k.slice(0, 2) === 'on') el.addEventListener(k.slice(2).toLowerCase(), v);
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  const add = (c) => {
+    if (c == null || c === false) return;
+    if (Array.isArray(c)) return c.forEach(add);
+    el.appendChild(c.nodeType ? c : document.createTextNode(String(c)));
   };
+  kids.forEach(add);
+  return el;
+}
+const lbl = (t, cls) => h('div', { class: 'lbl' + (cls ? ' ' + cls : '') }, t);
 
-  const toggleGoalkeeperAllowed = (name) => {
-    const current = config.goalkeeperNames || config.players;
-    const isAllowed = current.includes(name);
-    setConfig({
-      ...config,
-      goalkeeperNames: isAllowed
-        ? current.filter(p => p !== name)
-        : [...current, name],
-      startingGoalkeeper: isAllowed && config.startingGoalkeeper === name ? '' : config.startingGoalkeeper,
-    });
-  };
+let overlay = null;      // { kind, ... }
+let toastState = null;
+let toastTimer = null;
 
-  const startersNeeded = config.hasGoalkeeper
-    ? Math.max(0, config.numOnField - 1)
-    : config.numOnField;
-
-  const toggleStarter = (name) => {
-    if (name === config.startingGoalkeeper) return;
-    const isCurrent = config.chosenStarters.includes(name);
-    const validChosenCount = config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper).length;
-    if (isCurrent) {
-      setConfig({ ...config, chosenStarters: config.chosenStarters.filter(p => p !== name) });
-    } else {
-      if (validChosenCount >= startersNeeded) return;
-      setConfig({ ...config, chosenStarters: [...config.chosenStarters, name] });
-    }
-  };
-
-  const setStartingGoalkeeper = (name) => {
-    setConfig({
-      ...config,
-      startingGoalkeeper: name,
-      chosenStarters: config.chosenStarters.filter(p => p !== name),
-    });
-  };
-
-  const setStartersMode = (mode) => {
-    setConfig({ ...config, startersMode: mode });
-  };
-
-  const validation = useMemo(() => {
-    const errors = [];
-    if (config.gameLength <= 0) errors.push('Game length must be positive');
-    if (config.stintLength <= 0) errors.push('Stint length must be positive');
-    if (config.stintLength > config.gameLength) errors.push('Stint length cannot exceed game length');
-    if (config.numOnField < 1) errors.push('At least 1 player on field');
-    if (config.players.length === 0) errors.push('Add at least one player');
-
-    const fieldRotation = config.hasGoalkeeper
-      ? config.numOnField - 1
-      : config.numOnField;
-    const goalkeeperPlayers = getGoalkeeperPlayers(config);
-    const needsKeeperRestSpot = config.hasGoalkeeper && goalkeeperPlayers.length > 1;
-    const rotationPlayers = config.hasGoalkeeper
-      ? Math.max(0, config.players.length - (needsKeeperRestSpot ? 2 : 1))
-      : config.players.length;
-    const minPlayers = fieldRotation + (config.hasGoalkeeper ? (needsKeeperRestSpot ? 2 : 1) : 0);
-
-    if (config.hasGoalkeeper) {
-      if (goalkeeperPlayers.length === 0) errors.push('Allow at least one goalkeeper');
-      if (config.numOnField < 2) errors.push('Need >=2 on field if there is a GK');
-      if ((config.goalkeeperBlockStints || 0) < 1) errors.push('GK block length must be at least 1 stint');
-    }
-    if (rotationPlayers < fieldRotation && config.players.length > 0) {
-      errors.push(`Need at least ${minPlayers} players for ${config.numOnField} on field${needsKeeperRestSpot ? ' with a resting outgoing GK' : (config.hasGoalkeeper ? ' (incl. GK)' : '')}`);
-    }
-    if (config.startersMode === 'manual' && rotationPlayers >= fieldRotation && config.players.length > 0) {
-      const validChosen = config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper);
-      if (config.hasGoalkeeper && !goalkeeperPlayers.includes(config.startingGoalkeeper)) {
-        errors.push('Choose a starting goalkeeper');
-      }
-      if (validChosen.length !== startersNeeded) {
-        errors.push(`Choose exactly ${startersNeeded} starter${startersNeeded === 1 ? '' : 's'} (${validChosen.length}/${startersNeeded} picked)`);
-      }
-    }
-    return errors;
-  }, [config, startersNeeded]);
-
-  return (
-    <div>
-      <div className="section">
-        <div className="section-title">Game Settings</div>
-        <div className="field-row">
-          <div className="field">
-            <label>Game length (min)</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={config.gameLength}
-              onChange={e => setConfig({ ...config, gameLength: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-          <div className="field">
-            <label>Stint length (min)</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              min="0.1"
-              step="any"
-              value={config.stintLength}
-              onChange={e => setConfig({ ...config, stintLength: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
-          <div className="field">
-            <label>On field</label>
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={config.numOnField}
-              onChange={e => setConfig({ ...config, numOnField: parseInt(e.target.value) || 0 })}
-            />
-          </div>
-        </div>
-
-      </div>
-
-      <div className="section">
-        <div className="section-title">Roster ({config.players.length})</div>
-        <div className="roster-add">
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Player name"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addPlayer()}
-          />
-          <button className="btn primary" onClick={addPlayer}>Add</button>
-        </div>
-        <div className="roster-list">
-          {config.players.map(p => {
-            return (
-              <span
-                key={p}
-                className="roster-chip"
-              >
-                {p}
-                <button onClick={(e) => { e.stopPropagation(); removePlayer(p); }} aria-label={`Remove ${p} from roster`} title="Remove from roster">x</button>
-              </span>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="section">
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={config.hasGoalkeeper}
-            onChange={e => setConfig({
-              ...config,
-              hasGoalkeeper: e.target.checked,
-              goalkeeperNames: (config.goalkeeperNames || []).length > 0 ? config.goalkeeperNames : config.players,
-            })}
-          />
-          <span className="toggle-track" />
-          <span className="toggle-label">Include a goalkeeper</span>
-        </label>
-        {config.hasGoalkeeper && (
-          <div>
-            <div className="help-note">
-              Goalkeepers rotate in contiguous blocks. Field rotation uses
-              {' '}{Math.max(0, config.numOnField - 1)} field positions while the current keeper is in goal.
-            </div>
-            <div className="field" style={{ marginTop: 10, maxWidth: 180 }}>
-              <label>GK block (stints)</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                min="1"
-                value={config.goalkeeperBlockStints}
-                onChange={e => setConfig({ ...config, goalkeeperBlockStints: parseInt(e.target.value, 10) || 1 })}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {config.hasGoalkeeper && (
-        <div className="section">
-          <div className="section-title">Eligible Goalkeepers</div>
-          <div className="starter-list">
-              {config.players.map(p => {
-                const isAllowed = (config.goalkeeperNames || config.players).includes(p);
-                return (
-                  <span
-                    key={p}
-                    className={`starter-chip gk-eligible ${isAllowed ? 'selected' : ''}`}
-                    onClick={() => toggleGoalkeeperAllowed(p)}
-                    title={isAllowed ? 'Remove from goalkeeper rotation' : 'Add to goalkeeper rotation'}
-                  >
-                    {isAllowed && <span className="gk-tag">GK</span>}
-                    {p}
-                    {isAllowed && <button onClick={(e) => { e.stopPropagation(); toggleGoalkeeperAllowed(p); }} aria-label={`Remove ${p} from goalkeeper rotation`}>x</button>}
-                  </span>
-                );
-              })}
-          </div>
-        </div>
-      )}
-
-
-      {config.players.length > 0 && startersNeeded > 0 && (
-        <div className="section">
-          <div className="section-title">Starters</div>
-          <div className="radio-row">
-            <label className={`radio-label ${config.startersMode === 'random' ? 'checked' : ''}`}>
-              <input
-                type="radio"
-                name="startersMode"
-                checked={config.startersMode === 'random'}
-                onChange={() => setStartersMode('random')}
-              />
-              Random
-            </label>
-            <label className={`radio-label ${config.startersMode === 'manual' ? 'checked' : ''}`}>
-              <input
-                type="radio"
-                name="startersMode"
-                checked={config.startersMode === 'manual'}
-                onChange={() => setStartersMode('manual')}
-              />
-              Choose
-              {config.startersMode === 'manual' && (
-                <span className="count">
-                  {config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper).length}/{startersNeeded}
-                  {config.hasGoalkeeper && (config.startingGoalkeeper ? ' + GK' : ' + no GK')}
-                </span>
-              )}
-            </label>
-          </div>
-          {config.startersMode === 'manual' && (
-            <>
-              <div className="help-note">
-                {config.hasGoalkeeper
-                  ? <>Choose the starting goalkeeper and the {startersNeeded} {startersNeeded === 1 ? 'field player' : 'field players'} who will start.</>
-                  : <>Tap to pick the {startersNeeded} {startersNeeded === 1 ? 'player' : 'players'} who will start on the field.</>}
-              </div>
-              {config.hasGoalkeeper && (
-                <div className="swap-section-label">Starting field players</div>
-              )}
-              <div className="starter-list">
-                {config.players.length === 0 && (
-                  <span style={{ color: 'var(--dim)', fontSize: 13, fontStyle: 'italic' }}>Add players to the roster first</span>
-                )}
-                {config.players
-                  .filter(p => p !== config.startingGoalkeeper)
-                  .map(p => {
-                    const isStarter = config.chosenStarters.includes(p);
-                    const isFull = !isStarter && config.chosenStarters.filter(p => config.players.includes(p) && p !== config.startingGoalkeeper).length >= startersNeeded;
-                    return (
-                      <span
-                        key={p}
-                        className={`starter-chip ${isStarter ? 'selected' : ''} ${isFull ? 'disabled' : ''}`}
-                        onClick={() => !isFull && toggleStarter(p)}
-                      >
-                        {p}
-                      </span>
-                    );
-                  })}
-              </div>
-              {config.hasGoalkeeper && (
-                <>
-                  <div className="swap-section-label" style={{ marginTop: 10 }}>Starting goalkeeper</div>
-                  <div className="starter-list">
-                    {getGoalkeeperPlayers(config).map(p => {
-                      const isStartingGk = config.startingGoalkeeper === p;
-                      return (
-                        <span
-                          key={p}
-                          className={`starter-chip gk-eligible ${isStartingGk ? 'selected' : ''}`}
-                          onClick={() => setStartingGoalkeeper(p)}
-                        >
-                          <span className="gk-tag">GK</span>
-                          {p}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {validation.length > 0 && (
-        <div className="help-note" style={{ borderLeftColor: 'var(--amber)', color: 'var(--amber)' }}>
-          {validation.map((e, i) => <div key={i}>* {e}</div>)}
-        </div>
-      )}
-
-      <button
-        className="btn primary large full"
-        onClick={onGenerate}
-        disabled={validation.length > 0}
-      >
-        Generate Rotation ->
-      </button>
-    </div>
-  );
+function toast(text, actionLabel, action) {
+  clearTimeout(toastTimer);
+  toastState = { text, actionLabel, action };
+  toastTimer = setTimeout(() => { toastState = null; paintLayer(); }, 4200);
+  paintLayer();
 }
 
-// Preview
-function PreviewScreen({ config, rotation, onStart, onBack }) {
-  const stintLengthSec = config.stintLength * 60;
-  const halftimeSec = (config.gameLength * 60) / 2;
+function open(kind, extra) { overlay = Object.assign({ kind }, extra || {}); paintLayer(); }
+function close() { overlay = null; panelSquad.pick = null; paintLayer(); }
 
-  return (
-    <div>
-      <div className="section">
-        <div className="section-title">Rotation Plan</div>
-        <div className="help-note">
-          {rotation.stints.length} stints of {fmtMinutes(config.stintLength)} min |
-          {' '}{config.players.length} players |
-          {' '}{config.numOnField} on field
-          {config.hasGoalkeeper && <> | GK block: <strong>{config.goalkeeperBlockStints}</strong> stint{config.goalkeeperBlockStints === 1 ? '' : 's'}</>}
-        </div>
+/* ============================== screens ============================ */
 
-        <div className="rot-table">
-          {rotation.stints.map((s, i) => {
-            const startSec = i * stintLengthSec;
-            const endSec = (i + 1) * stintLengthSec;
-            const isHalftime = Math.abs(endSec - halftimeSec) < 1;
-            return (
-              <div className="rot-stint" key={s.idx}>
-                <div className="rot-stint-time">
-                  <div className="rot-stint-num">STINT {i + 1}</div>
-                  {fmtTime(startSec)}
-                  <div style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 400 }}>
-                    - {fmtTime(endSec)}{isHalftime && ' HT'}
-                  </div>
-                </div>
-                <div className="rot-stint-content">
-                  <div className="rot-onfield">
-                    {config.hasGoalkeeper && s.goalkeeper && (
-                      <span className="player-pill gk">{s.goalkeeper} <span style={{fontSize:9,opacity:0.7}}>GK</span></span>
-                    )}
-                    {s.onField.map(p => (
-                      <span className="player-pill" key={p}>{p}</span>
-                    ))}
-                  </div>
-                  {s.subOut.length > 0 && (
-                    <div className="rot-subs">
-                      <span className="out">OUT: {s.subOut.join(', ')}</span>
-                      <span className="arrow">|</span>
-                      <span className="in">IN: {s.subIn.join(', ')}</span>
-                    </div>
-                  )}
-                  {i === 0 && <div className="rot-subs"><span style={{ color: 'var(--dim)' }}>Starting lineup</span></div>}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="totals">
-        <div className="section-title" style={{ margin: 0 }}>Projected Minutes</div>
-        <div className="totals-grid">
-          {Object.entries(rotation.totalsByPlayer)
-            .sort((a, b) => (b[1] + (rotation.goalkeeperTotals?.[b[0]] || 0)) - (a[1] + (rotation.goalkeeperTotals?.[a[0]] || 0)))
-            .map(([name, n]) => (
-              <div className="total-item" key={name}>
-                <span className="name">{name}</span>
-                <span className="mins">
-                  {fmtMinutes(n * config.stintLength)}m
-                  {rotation.goalkeeperTotals?.[name] ? ` | ${fmtMinutes(rotation.goalkeeperTotals[name] * config.stintLength)}m GK` : ''}
-                </span>
-              </div>
-            ))}
-        </div>
-        <div className="totals-note">
-          Each kid plays whole stints; total stints may differ by 1 if players don't divide evenly.
-        </div>
-      </div>
-
-      <div className="btn-row" style={{ marginTop: 16 }}>
-        <button className="btn ghost" onClick={onBack}>Edit</button>
-        <button className="btn primary large" onClick={onStart}>Start Game</button>
-      </div>
-    </div>
-  );
+function render() {
+  applyTheme();
+  const app = document.getElementById('app');
+  const g = S.game;
+  let node;
+  if (!g) node = screenTeam();
+  else if (g.state === 'pre') node = screenLineup();
+  else node = screenMatch();
+  app.replaceChildren(node);
+  paintLayer();
+  tick();
 }
 
-// Live game
-function GameScreen({ config, initialRotation, initialLive, onExit }) {
-  const stintLengthSec = config.stintLength * 60;
-  const gameLengthSec = config.gameLength * 60;
-  const halftimeSec = gameLengthSec / 2;
+function applyTheme() {
+  const t = S.cfg.theme;
+  const root = document.documentElement;
+  if (t === 'auto') root.removeAttribute('data-theme');
+  else root.setAttribute('data-theme', t);
+}
 
-  const withGoalkeeperFallback = useCallback((baseRotation) => {
-    if (!config.hasGoalkeeper || baseRotation.stints.every(s => s.goalkeeper)) return baseRotation;
+/* ------------------------- 1. team / squad ------------------------- */
+function screenTeam() {
+  const cfg = S.cfg;
+  const squad = new Set(S.lastSquad.filter(id => byId(id)));
+  const wrap = h('div', { class: 'match' });
 
-    const schedule = getGoalkeeperSchedule(config, baseRotation.stints.length, baseRotation.stints[0]?.onField || []);
-    return {
-      ...baseRotation,
-      goalkeeperTotals: schedule.reduce((totals, goalkeeper) => {
-        if (goalkeeper) totals[goalkeeper] = (totals[goalkeeper] || 0) + 1;
-        return totals;
-      }, { ...(baseRotation.goalkeeperTotals || {}) }),
-      stints: baseRotation.stints.map((s, i) => {
-        const goalkeeper = s.goalkeeper || schedule[i] || null;
-        const previousGoalkeeper = i > 0 ? (baseRotation.stints[i - 1]?.goalkeeper || schedule[i - 1] || null) : null;
-        const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== goalkeeper
-          ? previousGoalkeeper
-          : null;
-        return {
-          ...s,
-          goalkeeper,
-          onField: s.onField.filter(p => p !== goalkeeper && p !== restingGoalkeeper),
-          offField: [
-            ...s.offField.filter(p => p !== goalkeeper && p !== restingGoalkeeper),
-            ...(restingGoalkeeper ? [restingGoalkeeper] : []),
-          ],
-        };
-      }),
-    };
-  }, [config]);
+  wrap.append(h('div', { class: 'rail' },
+    h('div', { class: 'wordmark grow' }, h('i'), 'PlayTime'),
+    h('button', { class: 'rail-btn', onclick: () => open('settings'), 'aria-label': 'Settings' }, '⚙')
+  ));
 
-  const [rotation, setRotation] = useState(() => initialLive?.rotation || withGoalkeeperFallback(initialRotation));
+  const body = h('div', { class: 'scroll' });
+  wrap.append(body);
 
-  const [running, setRunning] = useState(false);
-  const [elapsedMs, setElapsedMs] = useState(initialLive?.elapsedMs || 0);
-  const startTimestampRef = useRef(null);
-  const accumulatedPausedMsRef = useRef(0);
-  const pauseStartedAtRef = useRef(null);
+  if (!S.roster.length) {
+    body.append(
+      h('div', { class: 'sec' },
+        h('div', { class: 'empty' },
+          h('div', { class: 'nm', style: { fontSize: '18px', color: 'var(--ink)' } }, 'Add your team once.'),
+          h('div', { style: { marginTop: '6px' } }, 'After that, every match starts with two taps: mark who turned up, kick off.')
+        ),
+        h('button', { class: 'btn go big grow', style: { width: '100%' }, onclick: () => open('roster') }, 'Add players')
+      )
+    );
+    return wrap;
+  }
 
-  const chimerRef = useRef(null);
-  const firedChimesRef = useRef(new Set());
-  if (!chimerRef.current) chimerRef.current = makeChimer();
-
-  const [banner, setBanner] = useState(null); // 'halftime' | 'fulltime' | null
-
-  const wakeLockRef = useRef(null);
-  const acquireWakeLock = useCallback(async () => {
-    try {
-      if ('wakeLock' in navigator) {
-        wakeLockRef.current = await navigator.wakeLock.request('screen');
-      }
-    } catch (e) { /* ignore */ }
-  }, []);
-  const releaseWakeLock = useCallback(() => {
-    try { wakeLockRef.current?.release(); } catch (e) {}
-    wakeLockRef.current = null;
-  }, []);
-  useEffect(() => {
-    const onVis = () => {
-      if (document.visibilityState === 'visible' && running) acquireWakeLock();
-    };
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, [running, acquireWakeLock]);
-
-  useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => {
-      const now = Date.now();
-      const elapsed = now - startTimestampRef.current - accumulatedPausedMsRef.current;
-      setElapsedMs(Math.min(elapsed, gameLengthSec * 1000));
-    }, 100);
-    return () => clearInterval(id);
-  }, [running, gameLengthSec]);
-
-  const getFiredChimesThrough = (targetSec) => {
-    const fired = new Set();
-    const warnTime = halftimeSec - 60;
-    if (warnTime > 0 && targetSec >= warnTime) fired.add('halftime-warning');
-    if (targetSec >= halftimeSec) {
-      fired.add('halftime');
-      const stintBoundary = Math.round(halftimeSec / stintLengthSec) * stintLengthSec;
-      if (Math.abs(stintBoundary - halftimeSec) < 0.5) {
-        fired.add(`stint-end-${Math.round(halftimeSec / stintLengthSec)}`);
-      }
-    }
-    for (let k = 1; k < rotation.stints.length; k++) {
-      const t = k * stintLengthSec;
-      if (targetSec >= t) fired.add(`stint-end-${k}`);
-    }
-    if (targetSec >= gameLengthSec) fired.add('fulltime');
-    return fired;
-  };
-
-  const setGameTime = (nextMs, shouldPause = true) => {
-    const clampedMs = Math.max(0, Math.min(nextMs, gameLengthSec * 1000));
-    if (shouldPause) {
-      setRunning(false);
-      releaseWakeLock();
-      startTimestampRef.current = null;
-      accumulatedPausedMsRef.current = 0;
-      pauseStartedAtRef.current = null;
-    } else if (running) {
-      startTimestampRef.current = Date.now() - clampedMs;
-      accumulatedPausedMsRef.current = 0;
-      pauseStartedAtRef.current = null;
-    }
-    setElapsedMs(clampedMs);
-    firedChimesRef.current = getFiredChimesThrough(clampedMs / 1000);
-    setBanner(null);
-  };
-
-  const handleScrub = (e) => {
-    setGameTime(parseInt(e.target.value, 10) * 1000, true);
-  };
-
-  const adjustGameTime = (deltaSec) => {
-    setGameTime(elapsedMs + deltaSec * 1000, true);
-  };
-
-  const jumpToStint = (delta) => {
-    const targetIdx = Math.max(0, Math.min(rotation.stints.length - 1, currentStintIdx + delta));
-    setGameTime(targetIdx * stintLengthSec * 1000, true);
-  };
-
-  const elapsedSec = elapsedMs / 1000;
-  const isFullTime = elapsedSec >= gameLengthSec;
-  const currentStintIdx = Math.min(
-    rotation.stints.length - 1,
-    Math.floor(elapsedSec / stintLengthSec)
+  // --- attendance ---
+  const count = () => S.lastSquad.filter(id => byId(id)).length;
+  const head = h('div', { class: 'sec-head' },
+    lbl('Who turned up'),
+    h('div', { class: 'note', id: 'squad-count' }, count() + ' of ' + S.roster.length)
   );
-  const currentStint = rotation.stints[currentStintIdx];
-  const stintElapsedSec = elapsedSec - currentStintIdx * stintLengthSec;
-  const stintRemainSec = Math.max(0, stintLengthSec - stintElapsedSec);
-  const nextStint = rotation.stints[currentStintIdx + 1] || null;
-  const totalRemainSec = Math.max(0, gameLengthSec - elapsedSec);
-
-  const [swapMode, setSwapMode] = useState(false);
-  const [swapSelected, setSwapSelected] = useState(null); // { name, role }
-  const [rosterOpen, setRosterOpen] = useState(false);
-  const [newRosterName, setNewRosterName] = useState('');
-  const [newRosterGkAllowed, setNewRosterGkAllowed] = useState(false);
-  const [newRosterMode, setNewRosterMode] = useState('bench');
-  const [extraPlayers, setExtraPlayers] = useState(initialLive?.extraPlayers || []); // added mid-game
-  const [extraGoalkeepers, setExtraGoalkeepers] = useState(initialLive?.extraGoalkeepers || []);
-  const [removedPlayers, setRemovedPlayers] = useState(new Set(initialLive?.removedPlayers || []));
-  const [goalOpen, setGoalOpen] = useState(false);
-  const [editingGoalId, setEditingGoalId] = useState(null);
-  const [goalEvents, setGoalEvents] = useState(initialLive?.goalEvents || []);
-
-  const saveLiveSnapshot = useCallback(() => {
-    const hasLiveActivity = elapsedMs > 0 || extraPlayers.length > 0 || removedPlayers.size > 0 || goalEvents.length > 0;
-    try {
-      if (!hasLiveActivity) {
-        localStorage.removeItem(LIVE_STORAGE_KEY);
-        return;
-      }
-      localStorage.setItem(LIVE_STORAGE_KEY, JSON.stringify({
-        config,
-        rotation,
-        elapsedMs,
-        extraPlayers,
-        extraGoalkeepers,
-        removedPlayers: [...removedPlayers],
-        goalEvents,
-        savedAt: Date.now(),
-      }));
-    } catch (e) { /* ignore */ }
-  }, [config, rotation, elapsedMs, extraPlayers, extraGoalkeepers, removedPlayers, goalEvents]);
-
-  useEffect(() => {
-    if (!running) return;
-    const fired = firedChimesRef.current;
-    const c = chimerRef.current;
-
-    const warnTime = halftimeSec - 60;
-    if (warnTime > 0 && elapsedSec >= warnTime && !fired.has('halftime-warning')) {
-      fired.add('halftime-warning');
-      c.halftimeWarning();
-    }
-
-    if (elapsedSec >= halftimeSec && !fired.has('halftime')) {
-      fired.add('halftime');
-      const stintBoundary = Math.round(halftimeSec / stintLengthSec) * stintLengthSec;
-      if (Math.abs(stintBoundary - halftimeSec) < 0.5) fired.add(`stint-end-${Math.round(halftimeSec / stintLengthSec)}`);
-      c.halftime();
-      setBanner('halftime');
-      setTimeout(() => setBanner(b => b === 'halftime' ? null : b), 4000);
-    }
-
-    for (let k = 1; k < rotation.stints.length; k++) {
-      const t = k * stintLengthSec;
-      const key = `stint-end-${k}`;
-      if (elapsedSec >= t && !fired.has(key)) {
-        fired.add(key);
-        if (Math.abs(t - halftimeSec) > 0.5) c.stintEnd();
-      }
-    }
-
-    if (elapsedSec >= gameLengthSec && !fired.has('fulltime')) {
-      fired.add('fulltime');
-      c.fullTime();
-      setBanner('fulltime');
-      setRunning(false);
-      releaseWakeLock();
-    }
-  }, [elapsedSec, running, halftimeSec, gameLengthSec, stintLengthSec, rotation.stints.length, releaseWakeLock]);
-
-  useEffect(() => {
-    const id = setTimeout(() => {
-      saveLiveSnapshot();
-    }, 300);
-    return () => clearTimeout(id);
-  }, [saveLiveSnapshot]);
-
-  const handleStart = () => {
-    if (running) return;
-    chimerRef.current.unlock();
-    if (startTimestampRef.current === null) {
-      startTimestampRef.current = Date.now() - elapsedMs;
-      accumulatedPausedMsRef.current = 0;
-    } else if (pauseStartedAtRef.current !== null) {
-      accumulatedPausedMsRef.current += Date.now() - pauseStartedAtRef.current;
-      pauseStartedAtRef.current = null;
-    }
-    setRunning(true);
-    acquireWakeLock();
-  };
-
-  const handlePause = () => {
-    if (!running) return;
-    pauseStartedAtRef.current = Date.now();
-    setRunning(false);
-    releaseWakeLock();
-  };
-
-  const handleReset = () => {
-    if (!confirm('Reset the clock to 0:00? Substitutions and roster changes will be kept.')) return;
-    setGameTime(0, true);
-  };
-
-  const handleExit = () => {
-    const hasGameProgress = elapsedSec > 0 || goalEvents.length > 0 || extraPlayers.length > 0 || removedPlayers.size > 0;
-    if (hasGameProgress && !confirm('Go back to setup? This live game will be saved so you can resume it.')) return;
-    saveLiveSnapshot();
-    onExit();
-  };
-
-  const startSwap = () => {
-    setSwapMode(true);
-    setSwapSelected(null);
-  };
-  const cancelSwap = () => {
-    setSwapMode(false);
-    setSwapSelected(null);
-  };
-  const handleSwapTap = (name, role) => {
-    if (!swapSelected) {
-      setSwapSelected({ name, role });
-      return;
-    }
-    if (swapSelected.name === name && swapSelected.role === role) {
-      setSwapSelected(null);
-      return;
-    }
-    if (swapSelected.role === role) {
-      setSwapSelected({ name, role });
-      return;
-    }
-
-    const picks = [swapSelected, { name, role }];
-    const goalkeeperPick = picks.find(p => p.role === 'goalkeeper');
-    const fieldPick = picks.find(p => p.role === 'field');
-    const benchPick = picks.find(p => p.role === 'bench');
-    let newOnField = [...currentStint.onField];
-    let newOffField = [...currentStint.offField];
-    const goalkeeperSchedule = rotation.stints.map(s => s.goalkeeper || null);
-
-    if (goalkeeperPick) {
-      const newGoalkeeper = fieldPick?.name || benchPick?.name;
-      if (!newGoalkeeper) {
-        setSwapSelected({ name, role });
-        return;
-      }
-      const oldGoalkeeper = currentStint.goalkeeper;
-      for (let i = currentStintIdx; i < goalkeeperSchedule.length; i++) {
-        if (goalkeeperSchedule[i] !== oldGoalkeeper) break;
-        goalkeeperSchedule[i] = newGoalkeeper;
-      }
-      if (fieldPick) {
-        newOnField = currentStint.onField.map(p => p === fieldPick.name ? oldGoalkeeper : p).filter(Boolean);
-        newOffField = currentStint.offField.filter(p => p !== newGoalkeeper && p !== oldGoalkeeper);
-      } else {
-        newOnField = currentStint.onField.filter(p => p !== newGoalkeeper && p !== oldGoalkeeper);
-        newOffField = currentStint.offField.map(p => p === benchPick.name ? oldGoalkeeper : p).filter(Boolean);
-      }
-    } else {
-      const onFieldName = fieldPick.name;
-      const offFieldName = benchPick.name;
-      newOnField = currentStint.onField.map(p => p === onFieldName ? offFieldName : p);
-      newOffField = currentStint.offField.map(p => p === offFieldName ? onFieldName : p);
-    }
-
-    const newRotation = replanFromStint({
-      rotation,
-      fromIdx: currentStintIdx,
-      newOnField,
-      newOffField,
-      K: config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField,
-      allRotationPlayers: [...getRotationPlayers(config), ...extraPlayers].filter(p => !removedPlayers.has(p)),
-      goalkeeperSchedule,
-      totalStints: rotation.stints.length,
-    });
-    setRotation(newRotation);
-    setSwapMode(false);
-    setSwapSelected(null);
-  };
-
-  const addRosterPlayer = () => {
-    const trimmed = newRosterName.trim();
-    if (!trimmed) return;
-    const allCurrent = [...config.players, ...extraPlayers];
-    if (allCurrent.some(p => p.toLowerCase() === trimmed.toLowerCase())) return;
-    const nextExtraPlayers = [...extraPlayers, trimmed];
-    const nextExtraGoalkeepers = newRosterGkAllowed ? [...extraGoalkeepers, trimmed] : extraGoalkeepers;
-    setExtraPlayers(nextExtraPlayers);
-    setExtraGoalkeepers(nextExtraGoalkeepers);
-
-    const fieldK = config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField;
-    let newOnField = [...currentStint.onField];
-    let newOffField = [...currentStint.offField, trimmed];
-    if (newRosterMode === 'now' && fieldK > 0) {
-      if (newOnField.length < fieldK) {
-        newOnField = [...newOnField, trimmed];
-        newOffField = newOffField.filter(p => p !== trimmed);
-      } else if (newOnField.length > 0) {
-        const restingNow = newOnField[0];
-        newOnField = [trimmed, ...newOnField.slice(1)];
-        newOffField = [restingNow, ...newOffField.filter(p => p !== trimmed)];
-      }
-    }
-    const goalkeeperSchedule = newRosterGkAllowed
-      ? rebuildGoalkeeperSchedule([...getRotationPlayers(config), ...nextExtraPlayers].filter(p => !removedPlayers.has(p)), null, nextExtraGoalkeepers)
-      : rotation.stints.map(s => s.goalkeeper || null);
-    const newRotation = replanFromStint({
-      rotation,
-      fromIdx: currentStintIdx,
-      newOnField,
-      newOffField,
-      K: fieldK,
-      allRotationPlayers: [...getRotationPlayers(config), ...nextExtraPlayers].filter(p => !removedPlayers.has(p)),
-      goalkeeperSchedule,
-      totalStints: rotation.stints.length,
-    });
-    setRotation(newRotation);
-    setNewRosterName('');
-    setNewRosterGkAllowed(false);
-    setNewRosterMode('bench');
-  };
-
-  const rebuildGoalkeeperSchedule = (remainingPlayers, currentGoalkeeperOverride = null, goalkeeperOverride = extraGoalkeepers) => {
-    const schedule = rotation.stints.map(s => s.goalkeeper || null);
-    if (!config.hasGoalkeeper) return schedule;
-
-    const eligibleKeepers = Array.from(new Set([...(config.goalkeeperNames || config.players), ...goalkeeperOverride]))
-      .filter(p => remainingPlayers.includes(p));
-    const currentGoalkeeper = currentGoalkeeperOverride || currentStint.goalkeeper;
-    const keepers = currentGoalkeeper && remainingPlayers.includes(currentGoalkeeper)
-      ? [currentGoalkeeper, ...eligibleKeepers.filter(p => p !== currentGoalkeeper)]
-      : eligibleKeepers;
-
-    if (keepers.length === 0) return schedule.map((gk, i) => i < currentStintIdx ? gk : null);
-
-    const blockStints = Math.max(1, parseInt(config.goalkeeperBlockStints, 10) || 1);
-    for (let i = currentStintIdx; i < schedule.length; i++) {
-      schedule[i] = keepers[Math.floor((i - currentStintIdx) / blockStints) % keepers.length];
-    }
-    return schedule;
-  };
-
-  const removeRosterPlayer = (name) => {
-    if (!confirm(`Remove ${name} from the rest of the game?`)) return;
-    const newRemoved = new Set(removedPlayers);
-    newRemoved.add(name);
-    setRemovedPlayers(newRemoved);
-
-    let newOnField = currentStint.onField.filter(p => p !== name);
-    let newOffField = currentStint.offField.filter(p => p !== name);
-    const remainingPlayers = [...getRotationPlayers(config), ...extraPlayers].filter(p => !newRemoved.has(p));
-    let replacementGoalkeeper = null;
-
-    if (config.hasGoalkeeper && currentStint.goalkeeper === name) {
-      replacementGoalkeeper = newOffField.find(p => remainingPlayers.includes(p))
-        || newOnField.find(p => remainingPlayers.includes(p))
-        || null;
-      if (!replacementGoalkeeper) {
-        alert('No available player can replace the current goalkeeper.');
-        newRemoved.delete(name);
-        setRemovedPlayers(new Set(removedPlayers));
-        return;
-      }
-      newOffField = newOffField.filter(p => p !== replacementGoalkeeper);
-      if (newOnField.includes(replacementGoalkeeper)) {
-        newOnField = newOnField.filter(p => p !== replacementGoalkeeper);
-        if (newOffField.length > 0) {
-          const filler = newOffField[0];
-          newOnField = [...newOnField, filler];
-          newOffField = newOffField.slice(1);
+  const tiles = h('div', { class: 'tiles' },
+    S.roster.map(p => {
+      const inSquad = squad.has(p.id);
+      return h('button', {
+        class: 'tile' + (inSquad ? ' in' : ''),
+        'aria-pressed': inSquad ? 'true' : 'false',
+        onclick: () => {
+          if (squad.has(p.id)) squad.delete(p.id); else squad.add(p.id);
+          S.lastSquad = S.roster.filter(x => squad.has(x.id)).map(x => x.id);
+          save(); render();
         }
-      }
-    }
+      },
+        h('div', { class: 'who' }, p.name),
+        h('div', { class: 'meta' }, inSquad ? (p.gk && cfg.useGk ? 'Here · keeper' : 'Here') : 'Not here')
+      );
+    })
+  );
+  body.append(h('div', { class: 'sec' }, head, tiles,
+    h('div', { class: 'row', style: { marginTop: '10px' } },
+      h('button', { class: 'btn quiet grow', onclick: () => { S.lastSquad = S.roster.map(p => p.id); save(); render(); } }, 'All here'),
+      h('button', { class: 'btn quiet grow', onclick: () => open('roster') }, 'Edit team')
+    )
+  ));
 
-    if (currentStint.onField.includes(name)) {
-      if (newOffField.length > 0) {
-        const filler = newOffField[0];
-        newOnField = [...newOnField, filler];
-        newOffField = newOffField.slice(1);
-      }
-    }
-    const goalkeeperSchedule = rebuildGoalkeeperSchedule(remainingPlayers, replacementGoalkeeper);
-    const newRotation = replanFromStint({
-      rotation,
-      fromIdx: currentStintIdx,
-      newOnField,
-      newOffField,
-      K: Math.min(newOnField.length, config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField),
-      allRotationPlayers: remainingPlayers,
-      goalkeeperSchedule,
-      totalStints: rotation.stints.length,
-    });
-    setRotation(newRotation);
-  };
+  // --- match shape ---
+  const spp = stintsPerPeriod(cfg);
+  const secs = Math.round(stintMs(cfg) / 1000);
+  const shape = h('div', { class: 'card' },
+    h('div', { class: 'segs', style: { marginBottom: '10px' } },
+      [[2, 'Halves'], [4, 'Quarters']].map(([n, t]) =>
+        h('button', { class: cfg.periods === n ? 'on' : '', onclick: () => { cfg.periods = n; save(); render(); } }, t))
+    ),
+    h('div', { class: 'steps' },
+      stepper('Each ' + (cfg.periods === 4 ? 'quarter' : 'half'), cfg.periodMin + ' min',
+        cfg.periodMin, 1, 60, v => { cfg.periodMin = v; }),
+      stepper('Swap every', spp + ' × ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + ' per ' + (cfg.periods === 4 ? 'quarter' : 'half'),
+        cfg.stintMin, 1, 20, v => { cfg.stintMin = v; }),
+      stepper('On the field', cfg.useGk ? 'including the keeper' : 'no keeper', cfg.onField, 1, 11, v => { cfg.onField = v; })
+    )
+  );
+  body.append(h('div', { class: 'sec' }, h('div', { class: 'sec-head' }, lbl('Match')), shape));
 
-  const liveTotals = useMemo(() => {
-    const totals = {};
-    const goalkeeperTotals = {};
-    const allPlayers = [...getRotationPlayers(config), ...extraPlayers];
-    allPlayers.forEach(p => {
-      totals[p] = 0;
-      goalkeeperTotals[p] = 0;
-    });
-    rotation.stints.forEach((s, i) => {
-      const stintStartSec = i * stintLengthSec;
-      const stintEndSec = (i + 1) * stintLengthSec;
-      let cappedEnd = Math.min(stintEndSec, elapsedSec);
-      if (cappedEnd > stintStartSec) {
-        const playedSec = cappedEnd - stintStartSec;
-        if (s.goalkeeper) goalkeeperTotals[s.goalkeeper] = (goalkeeperTotals[s.goalkeeper] || 0) + playedSec;
-        s.onField.forEach(p => {
-          totals[p] = (totals[p] || 0) + playedSec;
-        });
-      }
-    });
-    return { field: totals, goalkeeper: goalkeeperTotals };
-  }, [rotation, elapsedSec, stintLengthSec, config, extraPlayers]);
+  // --- readiness ---
+  const avail = S.lastSquad.filter(id => byId(id));
+  const need = cfg.onField;
+  const ok = avail.length >= need;
+  const benchSize = Math.max(0, avail.length - need);
+  body.append(h('div', { class: 'note', style: { marginTop: '14px', textAlign: 'center' } },
+    ok
+      ? (benchSize === 0
+        ? 'Everyone plays the whole match — no subs needed.'
+        : benchSize + ' on the bench at a time · about ' + mins(estimateMinutes(avail.length, cfg)) + ' min each')
+      : 'You need at least ' + need + ' available to field ' + need + '.'
+  ));
 
-  const currentScorers = useMemo(() => (
-    Array.from(new Set([currentStint.goalkeeper, ...currentStint.onField].filter(Boolean)))
-  ), [currentStint]);
+  wrap.append(h('div', { class: 'dock' },
+    h('button', {
+      class: 'btn go big grow', disabled: !ok,
+      onclick: () => { S.game = newGame(avail); save(); render(); }
+    }, 'Set the lineup')
+  ));
+  return wrap;
+}
 
-  const goalPickerScorers = useMemo(() => {
-    const editingGoal = goalEvents.find(goal => goal.id === editingGoalId);
-    return Array.from(new Set([
-      ...currentScorers,
-      ...(editingGoal && editingGoal.team !== 'opponent' ? [editingGoal.scorer] : []),
-    ]));
-  }, [currentScorers, goalEvents, editingGoalId]);
+function estimateMinutes(nAvail, cfg) {
+  const total = cfg.periods * cfg.periodMin * 60000;
+  return total * Math.min(cfg.onField, nAvail) / Math.max(1, nAvail);
+}
 
-  const goalSummary = useMemo(() => {
-    const byPlayer = {};
-    let opponent = 0;
-    goalEvents.forEach(goal => {
-      if (goal.team === 'opponent') {
-        opponent++;
-      } else {
-        byPlayer[goal.scorer] = (byPlayer[goal.scorer] || 0) + 1;
-      }
-    });
-    const us = Object.values(byPlayer).reduce((sum, n) => sum + n, 0);
-    return { us, opponent, byPlayer };
-  }, [goalEvents]);
-
-  const recordGoal = (scorer) => {
-    const isOpponent = scorer === 'Opponent';
-    if (editingGoalId) {
-      setGoalEvents(events => events.map(goal => (
-        goal.id === editingGoalId
-          ? { ...goal, scorer, team: isOpponent ? 'opponent' : 'us' }
-          : goal
-      )));
-    } else {
-      setGoalEvents(events => [
-        ...events,
-        {
-          id: `${Date.now()}-${events.length}`,
-          scorer,
-          team: isOpponent ? 'opponent' : 'us',
-          timeSec: elapsedSec,
-          stintIdx: currentStintIdx,
-        },
-      ]);
-    }
-    setEditingGoalId(null);
-    setGoalOpen(false);
-  };
-
-  const editGoal = (id) => {
-    setEditingGoalId(id);
-    setGoalOpen(true);
-  };
-
-  const deleteGoal = (id) => {
-    if (!confirm('Delete this goal?')) return;
-    setGoalEvents(events => events.filter(goal => goal.id !== id));
-  };
-
-  const clockClass = isFullTime ? 'paused' : (running ? 'running' : 'paused');
-  const progressPct = Math.min(100, (elapsedSec / gameLengthSec) * 100);
-  const halftimeIsPast = elapsedSec >= halftimeSec;
-
-  let gameStatus = 'IN PROGRESS';
-  let gameStatusClass = '';
-  if (isFullTime) { gameStatus = 'FULL TIME'; gameStatusClass = 'fulltime'; }
-  else if (halftimeIsPast) { gameStatus = '2ND HALF'; }
-  else if (!running && elapsedSec === 0) { gameStatus = 'NOT STARTED'; gameStatusClass = 'paused'; }
-  else if (!running) { gameStatus = 'PAUSED'; gameStatusClass = 'paused'; }
-  else if (elapsedSec < halftimeSec) { gameStatus = '1ST HALF'; }
-
-  return (
-    <div className="game-screen">
-      {banner && (
-        <div
-          className={`banner ${banner}`}
-          onClick={() => setBanner(null)}
-        >
-          {banner === 'halftime' ? 'HALFTIME' : 'FULL TIME'}
-        </div>
-      )}
-
-      <div className="clock-label">Game time</div>
-      <div className={`clock-main ${clockClass}`}>{fmtTime(elapsedSec)}</div>
-      <div className="progress-bar">
-        <div className="fill" style={{ width: `${progressPct}%`, background: isFullTime ? 'var(--red)' : (halftimeIsPast ? 'var(--green)' : 'var(--green-2)') }} />
-        <div className="halftime-tick" />
-      </div>
-      <div className="time-scrubber">
-        <input
-          type="range"
-          min="0"
-          max={Math.floor(gameLengthSec)}
-          step="1"
-          value={Math.min(Math.floor(elapsedSec), Math.floor(gameLengthSec))}
-          onChange={handleScrub}
-          aria-label="Scrub game time"
-        />
-        <div className="time-scrubber-labels">
-          <span>0:00</span>
-          <span>{fmtTime(gameLengthSec)}</span>
-        </div>
-        <div className="time-jumps">
-          <button className="btn ghost" onClick={() => adjustGameTime(-10)}>-10s</button>
-          <button className="btn ghost" onClick={() => adjustGameTime(10)}>+10s</button>
-          <button className="btn ghost" onClick={() => jumpToStint(-1)}>Prev stint</button>
-          <button className="btn ghost" onClick={() => jumpToStint(1)}>Next stint</button>
-        </div>
-      </div>
-      <div className="clock-stint">
-        <div><span className="label">Stint</span> <span className="val">{currentStintIdx + 1}/{rotation.stints.length}</span></div>
-        <div><span className="label">Stint left</span> <span className="val">{fmtTime(stintRemainSec)}</span></div>
-        <div><span className="label">Game left</span> <span className="val">{fmtTime(totalRemainSec)}</span></div>
-      </div>
-      <div className={`game-status ${gameStatusClass}`}>{gameStatus}</div>
-
-      <div className="score-panel">
-        <div className="score-team">
-          <div className="label">Us</div>
-          <div className="value">{goalSummary.us}</div>
-        </div>
-        <div className="score-divider">-</div>
-        <div className="score-team" style={{ textAlign: 'right' }}>
-          <div className="label">Opponent</div>
-          <div className="value">{goalSummary.opponent}</div>
-        </div>
-      </div>
-
-      {isFullTime && (
-        <div className="summary-panel">
-          <div className="section-title" style={{ margin: 0 }}>Post-game Summary</div>
-          <div className="summary-score">
-            <div>
-              <div className="label">Us</div>
-              <div className="value">{goalSummary.us}</div>
-            </div>
-            <div className="score-divider">-</div>
-            <div style={{ textAlign: 'right' }}>
-              <div className="label">Opponent</div>
-              <div className="value">{goalSummary.opponent}</div>
-            </div>
-          </div>
-          <div className="totals-grid">
-            {Object.entries(liveTotals.field)
-              .sort((a, b) => a[0].localeCompare(b[0]))
-              .map(([name, sec]) => (
-                <div className="total-item" key={name}>
-                  <span className="name">{name}</span>
-                  <span className="mins">
-                    {Math.floor(sec / 60)}m {Math.floor(sec % 60)}s
-                    {liveTotals.goalkeeper[name] ? ` | ${Math.floor(liveTotals.goalkeeper[name] / 60)}m ${Math.floor(liveTotals.goalkeeper[name] % 60)}s GK` : ''}
-                    {goalSummary.byPlayer[name] ? ` | ${goalSummary.byPlayer[name]} goal${goalSummary.byPlayer[name] === 1 ? '' : 's'}` : ''}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </div>
-      )}
-
-      {/* On field now */}
-      <div className="panel">
-        <div className="panel-title">
-          On field now
-          {!swapMode && <span style={{ fontSize: 10, color: 'var(--dim)' }}>tap "Manual sub" to swap</span>}
-        </div>
-        {!swapMode ? (
-          <div className="now-on">
-            {config.hasGoalkeeper && currentStint.goalkeeper && (
-              <span className="player-pill gk">{currentStint.goalkeeper} <span style={{fontSize:9,opacity:0.7}}>GK</span></span>
-            )}
-            {currentStint.onField.map(p => (
-              <span className="player-pill" key={p}>{p}</span>
-            ))}
-          </div>
-        ) : (
-          <div>
-            <div className="manual-instructions">
-              Tap two players to swap field, bench, or goalkeeper roles. The rotation will replan.
-            </div>
-            {config.hasGoalkeeper && currentStint.goalkeeper && (
-              <>
-                <div className="swap-section-label">In goal</div>
-                <div className="swap-list">
-                  <span
-                    className={`player-pill gk ${swapSelected?.name === currentStint.goalkeeper && swapSelected?.role === 'goalkeeper' ? 'selected' : ''}`}
-                    onClick={() => handleSwapTap(currentStint.goalkeeper, 'goalkeeper')}
-                  >
-                    {currentStint.goalkeeper}
-                  </span>
-                </div>
-              </>
-            )}
-            <div className="swap-section-label">On field</div>
-            <div className="swap-list">
-              {currentStint.onField.map(p => (
-                <span
-                  key={p}
-                  className={`player-pill ${swapSelected?.name === p && swapSelected?.role === 'field' ? 'selected' : ''}`}
-                  onClick={() => handleSwapTap(p, 'field')}
-                >{p}</span>
-              ))}
-            </div>
-            <div className="swap-section-label">On bench</div>
-            <div className="swap-list">
-              {currentStint.offField.length === 0 && <span style={{ color: 'var(--dim)', fontSize: 13 }}>No one on bench.</span>}
-              {currentStint.offField.map(p => (
-                <span
-                  key={p}
-                  className={`player-pill off ${swapSelected?.name === p && swapSelected?.role === 'bench' ? 'selected' : ''}`}
-                  onClick={() => handleSwapTap(p, 'bench')}
-                >{p}</span>
-              ))}
-            </div>
-            <button className="btn ghost full" style={{ marginTop: 10 }} onClick={cancelSwap}>Cancel swap</button>
-          </div>
-        )}
-
-        {/* Next sub */}
-        {nextStint ? (
-          <>
-            <div className="panel-title" style={{ marginTop: 14 }}>
-              Next sub
-              <span className="countdown">in {fmtTime(stintRemainSec)}</span>
-            </div>
-            {nextStint.subOut.length > 0 ? (
-              <div className="next-sub">
-                {nextStint.goalkeeper && nextStint.goalkeeper !== currentStint.goalkeeper && (
-                  <div className="sub-side in">
-                    <div className="label">GK</div>
-                    <div className="pills">
-                      <span className="player-pill gk">{nextStint.goalkeeper}</span>
-                    </div>
-                  </div>
-                )}
-                <div className="sub-side out">
-                  <div className="label">OUT</div>
-                  <div className="pills">
-                    {nextStint.subOut.map(p => <span key={p} className="player-pill off">{p}</span>)}
-                  </div>
-                </div>
-                <div className="sub-arrow">-></div>
-                <div className="sub-side in">
-                  <div className="label">IN</div>
-                  <div className="pills">
-                    {nextStint.subIn.map(p => <span key={p} className="player-pill">{p}</span>)}
-                  </div>
-                </div>
-              </div>
-            ) : nextStint.goalkeeper && nextStint.goalkeeper !== currentStint.goalkeeper ? (
-              <div className="next-sub">
-                <div className="sub-side in">
-                  <div className="label">GK</div>
-                  <div className="pills">
-                    <span className="player-pill gk">{nextStint.goalkeeper}</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="next-sub-empty">No subs at next stint</div>
-            )}
-          </>
-        ) : (
-          <div className="next-sub-empty" style={{ marginTop: 10 }}>Last stint - game ending</div>
-        )}
-      </div>
-
-      <button
-        className="btn primary large full goal-button"
-        onClick={() => { setEditingGoalId(null); setGoalOpen(true); }}
-      >
-        Goal
-      </button>
-
-      {/* Controls */}
-      <div className="btn-row" style={{ marginTop: 14 }}>
-        {!running && !isFullTime && (
-          <button className="btn primary large" onClick={handleStart}>
-            {elapsedSec === 0 ? 'Start' : 'Resume'}
-          </button>
-        )}
-        {running && (
-          <button className="btn large" onClick={handlePause}>Pause</button>
-        )}
-        {!swapMode && !isFullTime && (
-          <button className="btn" onClick={startSwap}>Manual sub</button>
-        )}
-      </div>
-      <div className="small-action-row">
-        <button className="btn ghost" onClick={() => setRosterOpen(true)}>Add/Remove player</button>
-        <button className="btn ghost" onClick={handleReset}>Reset clock</button>
-        <button className="btn ghost" onClick={handleExit}>Setup</button>
-      </div>
-
-      {/* Live totals */}
-      <div className="totals live-totals">
-        <div className="section-title" style={{ margin: 0 }}>Minutes played (live)</div>
-        <div className="totals-grid">
-          {Object.entries(liveTotals.field)
-            .filter(([n]) => !removedPlayers.has(n))
-            .sort((a, b) => (b[1] + (liveTotals.goalkeeper[b[0]] || 0)) - (a[1] + (liveTotals.goalkeeper[a[0]] || 0)))
-            .map(([name, sec]) => (
-              <div className="total-item" key={name}>
-                <span className="name">{name}{removedPlayers.has(name) ? ' (out)' : ''}</span>
-                <span className="mins">
-                  {Math.floor(sec / 60)}m {Math.floor(sec % 60)}s
-                  {liveTotals.goalkeeper[name] ? ` | ${Math.floor(liveTotals.goalkeeper[name] / 60)}m ${Math.floor(liveTotals.goalkeeper[name] % 60)}s GK` : ''}
-                </span>
-              </div>
-            ))}
-        </div>
-      </div>
-
-      <div className="totals live-totals">
-        <div className="section-title" style={{ margin: 0 }}>Goals</div>
-        <div className="totals-grid">
-          {Object.entries(goalSummary.byPlayer)
-            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-            .map(([name, total]) => (
-              <div className="total-item" key={name}>
-                <span className="name">{name}</span>
-                <span className="mins">{total}</span>
-              </div>
-            ))}
-          {goalSummary.opponent > 0 && (
-            <div className="total-item">
-              <span className="name">Opponent</span>
-              <span className="mins">{goalSummary.opponent}</span>
-            </div>
-          )}
-          {goalEvents.length === 0 && (
-            <div className="next-sub-empty" style={{ gridColumn: '1 / -1' }}>No goals recorded</div>
-          )}
-        </div>
-        {goalEvents.length > 0 && (
-          <div className="goal-log">
-            {[...goalEvents].reverse().map(goal => (
-              <div className="goal-log-item" key={goal.id}>
-                <span><strong>{goal.scorer}</strong></span>
-                <div className="goal-log-actions">
-                  <span>{fmtTime(goal.timeSec)} | Stint {goal.stintIdx + 1}</span>
-                  <button className="btn ghost" onClick={() => editGoal(goal.id)}>Edit</button>
-                  <button className="btn ghost" onClick={() => deleteGoal(goal.id)}>Delete</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <div className="footer-note">
-        Wake Lock keeps the screen on while the game runs. If the screen does sleep,
-        the clock will resync to the correct time when you wake it back up. Audio
-        chimes only fire while the screen is on.
-      </div>
-
-      {/* Goal modal */}
-      {goalOpen && (
-        <div className="modal-backdrop" onClick={() => { setGoalOpen(false); setEditingGoalId(null); }}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>{editingGoalId ? 'Edit goal' : 'Goal scorer'}</h3>
-            <p>{editingGoalId ? 'Choose the correct scorer.' : `Choose who scored at ${fmtTime(elapsedSec)}.`}</p>
-
-            <div className="goal-picker">
-              {goalPickerScorers.map(name => (
-                <button className="btn" key={name} onClick={() => recordGoal(name)}>
-                  {name}
-                </button>
-              ))}
-              <button className="btn danger" onClick={() => recordGoal('Opponent')}>
-                Opponent
-              </button>
-            </div>
-
-            <button className="btn ghost full" onClick={() => { setGoalOpen(false); setEditingGoalId(null); }}>Cancel</button>
-          </div>
-        </div>
-      )}
-
-      {/* Roster modal */}
-      {rosterOpen && (
-        <div className="modal-backdrop" onClick={() => setRosterOpen(false)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Roster mid-game</h3>
-            <p>Add a late-arriving player or remove someone for the rest of the game. The rotation replans from the current stint.</p>
-
-            <div className="roster-add">
-              <input
-                type="text"
-                placeholder="New player name"
-                value={newRosterName}
-                onChange={e => setNewRosterName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && addRosterPlayer()}
-              />
-              <button className="btn primary" onClick={addRosterPlayer}>Add</button>
-            </div>
-            <div className="radio-row" style={{ marginTop: 10 }}>
-              <label className={`radio-label ${newRosterMode === 'bench' ? 'checked' : ''}`}>
-                <input
-                  type="radio"
-                  name="newRosterMode"
-                  checked={newRosterMode === 'bench'}
-                  onChange={() => setNewRosterMode('bench')}
-                />
-                Bench
-              </label>
-              <label className={`radio-label ${newRosterMode === 'now' ? 'checked' : ''}`}>
-                <input
-                  type="radio"
-                  name="newRosterMode"
-                  checked={newRosterMode === 'now'}
-                  onChange={() => setNewRosterMode('now')}
-                />
-                Work in now
-              </label>
-            </div>
-            {config.hasGoalkeeper && (
-              <label className="toggle" style={{ marginTop: 10 }}>
-                <input
-                  type="checkbox"
-                  checked={newRosterGkAllowed}
-                  onChange={e => setNewRosterGkAllowed(e.target.checked)}
-                />
-                <span className="toggle-track" />
-                <span className="toggle-label">Eligible for GK</span>
-              </label>
-            )}
-
-            <div className="swap-section-label">Active players</div>
-            <div className="roster-list">
-              {[...getRotationPlayers(config), ...extraPlayers]
-                .filter(p => !removedPlayers.has(p))
-                .map(p => (
-                  <span key={p} className="roster-chip">
-                    {p}
-                    <button onClick={() => removeRosterPlayer(p)} aria-label={`Remove ${p}`}>x</button>
-                  </span>
-                ))
-              }
-              {removedPlayers.size > 0 && (
-                <>
-                  {[...removedPlayers].map(p => (
-                    <span key={p} className="roster-chip" style={{ opacity: 0.4, textDecoration: 'line-through' }}>{p}</span>
-                  ))}
-                </>
-              )}
-            </div>
-
-            <button className="btn full" onClick={() => setRosterOpen(false)}>Done</button>
-          </div>
-        </div>
-      )}
-    </div>
+function stepper(title, subtitle, value, lo, hi, set) {
+  const apply = (d) => { set(clamp(value + d, lo, hi)); save(); render(); };
+  return h('div', { class: 'step' },
+    h('div', { class: 'cap' }, h('div', { class: 't' }, title), h('div', { class: 's' }, subtitle)),
+    h('div', { class: 'ctl' },
+      h('button', { onclick: () => apply(-1), 'aria-label': 'Decrease ' + title }, '−'),
+      h('div', { class: 'val fig' }, value),
+      h('button', { onclick: () => apply(1), 'aria-label': 'Increase ' + title }, '+')
+    )
   );
 }
 
-function getRotationPlayers(config) {
-  return [...config.players];
+/* --------------------------- 2. lineup ----------------------------- */
+function screenLineup() {
+  const g = S.game, cfg = S.cfg;
+  const p = g.pending || computePending(g, true);
+  const wrap = h('div', { class: 'match' });
+
+  wrap.append(h('div', { class: 'rail' },
+    h('button', { class: 'rail-btn', onclick: () => { S.game = null; save(); render(); }, 'aria-label': 'Back' }, '‹'),
+    h('div', { class: 'wordmark grow' }, 'Starting lineup'),
+    h('button', { class: 'rail-btn', onclick: () => open('settings'), 'aria-label': 'Settings' }, '⚙')
+  ));
+
+  const body = h('div', { class: 'scroll' });
+  wrap.append(body);
+
+  const bench = g.squad.filter(id => !p.field.includes(id) && id !== p.gk);
+  body.append(h('div', { class: 'sec' },
+    h('div', { class: 'sec-head' }, lbl('On the field'), h('div', { class: 'note' }, p.field.length + (p.gk ? 1 : 0) + ' out')),
+    h('div', { class: 'strip-row' },
+      p.gk && chip(p.gk, 'keeper', 'GK'),
+      p.field.map(id => chip(id, 'pitch'))
+    )
+  ));
+
+  body.append(h('div', { class: 'sec' },
+    h('div', { class: 'sec-head' }, lbl('Starting on the bench')),
+    bench.length
+      ? h('div', { class: 'strip-row' }, bench.map(id => chip(id, 'bench')))
+      : h('div', { class: 'note' }, 'Nobody — the whole squad starts.')
+  ));
+
+  // projection
+  const proj = project(g, cfg, S.roster, orderOf);
+  const entries = Object.entries(proj.totals).sort((a, b) => b[1] - a[1]);
+  if (entries.length) {
+    const max = entries[0][1] || 1;
+    const spread = entries.length > 1 ? entries[0][1] - entries[entries.length - 1][1] : 0;
+    body.append(h('div', { class: 'sec' },
+      h('div', { class: 'sec-head' }, lbl('If it all goes to plan'),
+        h('div', { class: 'note' }, spread < 30000 ? 'Even all round' : 'Within ' + Math.ceil(spread / 60000) + ' min')),
+      h('div', { class: 'bars' }, entries.map(([id, ms]) => barRow(id, ms, proj.gkTotals[id] || 0, max))),
+      cfg.useGk ? gkLegend() : null
+    ));
+  }
+
+  wrap.append(h('div', { class: 'dock' },
+    h('button', {
+      class: 'btn square', 'aria-label': 'Shuffle the starters',
+      onclick: () => {
+        // reshuffle only the tie-break order, so a different — but equally
+        // fair — starting XI comes up without touching the team list
+        const t = g.squad.slice();
+        for (let i = t.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [t[i], t[j]] = [t[j], t[i]];
+        }
+        g.tieOrder = t;
+        g.pending = computePending(g, true);
+        save(); render();
+      }
+    }, '⇄'),
+    h('button', { class: 'btn go big grow', onclick: startClock }, 'Kick off')
+  ));
+  return wrap;
 }
 
-// Rebuild the remaining plan after a live manual sub or roster change.
-function replanFromStint({ rotation, fromIdx, newOnField, newOffField, K, allRotationPlayers, goalkeeperSchedule = [], totalStints }) {
-  const past = rotation.stints.slice(0, fromIdx).map(s => ({ ...s, onField: [...s.onField], offField: [...s.offField], subOut: [...s.subOut], subIn: [...s.subIn] }));
-
-  const stintsPlayed = {};
-  const lastAnchored = {};
-  const origOrder = {};
-  allRotationPlayers.forEach((p, i) => {
-    stintsPlayed[p] = 0;
-    lastAnchored[p] = -1000;
-    origOrder[p] = i;
-  });
-  past.forEach((s, i) => {
-    s.onField.forEach(p => {
-      if (stintsPlayed[p] !== undefined) stintsPlayed[p]++;
-    });
-  });
-
-  const currentGoalkeeper = goalkeeperSchedule[fromIdx] || rotation.stints[fromIdx]?.goalkeeper || null;
-  const previousGoalkeeper = fromIdx > 0 ? (goalkeeperSchedule[fromIdx - 1] || rotation.stints[fromIdx - 1]?.goalkeeper || null) : null;
-  const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== currentGoalkeeper
-    ? previousGoalkeeper
-    : null;
-  if (currentGoalkeeper) {
-    newOnField = newOnField.filter(p => p !== currentGoalkeeper);
-    newOffField = newOffField.filter(p => p !== currentGoalkeeper);
-  }
-  if (restingGoalkeeper) {
-    newOnField = newOnField.filter(p => p !== restingGoalkeeper);
-    newOffField = newOffField.includes(restingGoalkeeper)
-      ? newOffField
-      : [...newOffField, restingGoalkeeper];
-  }
-
-  const prevOnField = fromIdx > 0 ? past[fromIdx - 1].onField : [];
-  const subOut = prevOnField.filter(p => !newOnField.includes(p));
-  const subIn = newOnField.filter(p => !prevOnField.includes(p));
-  newOnField.forEach(p => {
-    if (stintsPlayed[p] !== undefined) stintsPlayed[p]++;
-  });
-
-  const newStints = [...past, {
-    idx: fromIdx,
-    goalkeeper: currentGoalkeeper,
-    onField: [...newOnField].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-    offField: [...newOffField].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-    subOut,
-    subIn,
-  }];
-
-  let onField = [...newOnField];
-  let bench = [...newOffField];
-
-  for (let s = fromIdx + 1; s < totalStints; s++) {
-    const goalkeeper = goalkeeperSchedule[s] || rotation.stints[s]?.goalkeeper || null;
-    const previousGoalkeeper = goalkeeperSchedule[s - 1] || rotation.stints[s - 1]?.goalkeeper || null;
-    const restingGoalkeeper = previousGoalkeeper && previousGoalkeeper !== goalkeeper
-      ? previousGoalkeeper
-      : null;
-    const eligible = allRotationPlayers.filter(p => p !== goalkeeper && p !== restingGoalkeeper);
-    onField = onField.filter(p => eligible.includes(p));
-    bench = eligible.filter(p => !onField.includes(p));
-
-    const N = eligible.length;
-    if (N === 0 || K === 0) break;
-    const effectiveK = Math.min(K, N);
-
-    if (N <= effectiveK || bench.length === 0) {
-      newStints.push({
-        idx: s,
-        goalkeeper,
-        onField: [...onField].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-        offField: [...bench, ...(restingGoalkeeper ? [restingGoalkeeper] : [])].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-        subOut: [],
-        subIn: [],
-      });
-      onField.forEach(p => { if (stintsPlayed[p] !== undefined) stintsPlayed[p]++; });
-      continue;
-    }
-
-    const numAnchors = Math.max(0, 2 * effectiveK - N);
-    const numSubs = effectiveK - numAnchors;
-
-    const onFieldSorted = [...onField].sort((a, b) => {
-      if (stintsPlayed[a] !== stintsPlayed[b]) return stintsPlayed[a] - stintsPlayed[b];
-      if (lastAnchored[a] !== lastAnchored[b]) return lastAnchored[a] - lastAnchored[b];
-      return (origOrder[a] ?? 999) - (origOrder[b] ?? 999);
-    });
-    const anchors = onFieldSorted.slice(0, numAnchors);
-    anchors.forEach(p => lastAnchored[p] = s);
-    const goingOff = onField.filter(p => !anchors.includes(p));
-
-    const benchSorted = [...bench].sort((a, b) => {
-      if (stintsPlayed[a] !== stintsPlayed[b]) return stintsPlayed[a] - stintsPlayed[b];
-      return (origOrder[a] ?? 999) - (origOrder[b] ?? 999);
-    });
-    const comingOn = benchSorted.slice(0, numSubs);
-    const stayingBench = benchSorted.slice(numSubs);
-
-    const newOn = [...anchors, ...comingOn];
-    const newOff = [...stayingBench, ...goingOff, ...(restingGoalkeeper ? [restingGoalkeeper] : [])];
-
-    newOn.forEach(p => { if (stintsPlayed[p] !== undefined) stintsPlayed[p]++; });
-
-    newStints.push({
-      idx: s,
-      goalkeeper,
-      onField: [...newOn].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-      offField: [...newOff].sort((a, b) => (origOrder[a] ?? 999) - (origOrder[b] ?? 999)),
-      subOut: goingOff,
-      subIn: comingOn,
-    });
-
-    onField = newOn;
-    bench = newOff;
-  }
-
-  return { stints: newStints, totalsByPlayer: { ...stintsPlayed } };
-}
-
-// App shell and persistence
-function App() {
-  const [phase, setPhase] = useState('setup');
-  const [config, setConfig] = useState({
-    gameLength: 40,
-    stintLength: 4,
-    numOnField: 4,
-    hasGoalkeeper: false,
-    goalkeeperName: '',
-    goalkeeperNames: [],
-    goalkeeperBlockStints: 2,
-    startingGoalkeeper: '',
-    players: [],
-    startersMode: 'random',
-    chosenStarters: [],
-  });
-  const [rotation, setRotation] = useState(null);
-  const [savedLive, setSavedLive] = useState(null);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    try {
-      setShowOnboarding(localStorage.getItem(ONBOARDING_STORAGE_KEY) !== 'true');
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const saved = JSON.parse(raw);
-        setConfig({
-          gameLength: saved.gameLength ?? 40,
-          stintLength: saved.stintLength ?? 4,
-          numOnField: saved.numOnField ?? 4,
-          hasGoalkeeper: saved.hasGoalkeeper ?? false,
-          goalkeeperName: saved.goalkeeperName ?? '',
-          goalkeeperNames: saved.goalkeeperNames ?? (saved.players ?? []),
-          goalkeeperBlockStints: saved.goalkeeperBlockStints ?? 2,
-          startingGoalkeeper: saved.startingGoalkeeper ?? '',
-          players: saved.players ?? [],
-          startersMode: saved.startersMode ?? 'random',
-          chosenStarters: saved.chosenStarters ?? [],
-        });
-      }
-      const liveRaw = localStorage.getItem(LIVE_STORAGE_KEY);
-      if (liveRaw) {
-        const live = JSON.parse(liveRaw);
-        if (live?.config && live?.rotation) setSavedLive(live);
-      }
-    } catch (e) { /* ignore */ }
-  }, []);
-
-  const dismissOnboarding = () => {
-    try { localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true'); } catch (e) { /* ignore */ }
-    setShowOnboarding(false);
-  };
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-    } catch (e) { /* ignore */ }
-  }, [config]);
-
-  const handleGenerate = () => {
-    try { localStorage.removeItem(LIVE_STORAGE_KEY); } catch (e) { /* ignore */ }
-    setSavedLive(null);
-    const numStints = Math.ceil(config.gameLength / config.stintLength);
-    const rotPlayers = getRotationPlayers(config);
-    const fieldK = config.hasGoalkeeper ? config.numOnField - 1 : config.numOnField;
-
-    let orderedPlayers;
-    const validChosen = config.chosenStarters.filter(p => rotPlayers.includes(p) && p !== config.startingGoalkeeper);
-    if (config.startersMode === 'manual' && validChosen.length === fieldK) {
-      const rest = shuffle(rotPlayers.filter(p => !validChosen.includes(p)));
-      orderedPlayers = [...validChosen, ...rest];
-    } else {
-      orderedPlayers = shuffle(rotPlayers);
-    }
-
-    const goalkeeperSchedule = getGoalkeeperSchedule(config, numStints, validChosen);
-    const r = computeRotationWithGoalkeepers(orderedPlayers, fieldK, numStints, goalkeeperSchedule);
-    setRotation(r);
-    setPhase('preview');
-  };
-
-  const resumeLiveGame = () => {
-    if (!savedLive?.config || !savedLive?.rotation) return;
-    setConfig(savedLive.config);
-    setRotation(savedLive.rotation);
-    setPhase('game');
-  };
-
-  const discardLiveGame = () => {
-    if (!confirm('Discard the saved live game?')) return;
-    try { localStorage.removeItem(LIVE_STORAGE_KEY); } catch (e) { /* ignore */ }
-    setSavedLive(null);
-  };
-
-  const handleGameExit = () => {
-    try {
-      const liveRaw = localStorage.getItem(LIVE_STORAGE_KEY);
-      setSavedLive(liveRaw ? JSON.parse(liveRaw) : null);
-    } catch (e) { /* ignore */ }
-    setPhase('setup');
-  };
-
-  const phaseLabel = { setup: 'Setup', preview: 'Plan', game: 'Game' }[phase];
-
-  return (
-    <div className="app">
-      <div className="app-header">
-        <h1><span className="accent" />PlayTime</h1>
-        <div className="header-actions">
-          <button className="btn ghost how-to-btn" onClick={() => setShowOnboarding(true)}>How to use</button>
-          <span className="phase-label">{phaseLabel}</span>
-        </div>
-      </div>
-
-      {showOnboarding && (
-        <div className="modal-backdrop" onClick={dismissOnboarding}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>Welcome to PlayTime</h3>
-            <p>
-              PlayTime helps coaches build a fair substitution plan, rotate goalkeepers, track game time, and record goals during the game.
-            </p>
-            <ul>
-              <li>Add each player in the Roster section, then choose game length, stint length, and how many players are on the field.</li>
-              <li>Turn on Include a goalkeeper if you want keeper rotations, then choose who is eligible and who starts in goal.</li>
-              <li>Pick random or manual starters, generate the rotation, review the plan, and start the game clock.</li>
-              <li>During the game, use Goal, Manual sub, Add/Remove player, and the time controls as needed.</li>
-            </ul>
-            <button className="btn primary full" onClick={dismissOnboarding}>Got it</button>
-          </div>
-        </div>
-      )}
-
-      {phase === 'setup' && (
-        <>
-          {savedLive && (
-            <div className="recovery-panel">
-              <div className="section-title" style={{ margin: 0 }}>Saved Live Game</div>
-              <div className="help-note" style={{ marginTop: 10 }}>
-                Resume the in-progress game at {fmtTime((savedLive.elapsedMs || 0) / 1000)} with {savedLive.goalEvents?.length || 0} goal{(savedLive.goalEvents?.length || 0) === 1 ? '' : 's'} recorded.
-              </div>
-              <div className="btn-row">
-                <button className="btn primary" onClick={resumeLiveGame}>Resume game</button>
-                <button className="btn ghost" onClick={discardLiveGame}>Discard</button>
-              </div>
-            </div>
-          )}
-          <SetupScreen
-            config={config}
-            setConfig={setConfig}
-            onGenerate={handleGenerate}
-          />
-        </>
-      )}
-      {phase === 'preview' && rotation && (
-        <PreviewScreen
-          config={config}
-          rotation={rotation}
-          onStart={() => { setSavedLive(null); setPhase('game'); }}
-          onBack={() => setPhase('setup')}
-        />
-      )}
-      {phase === 'game' && rotation && (
-        <GameScreen
-          key={`${phase}-${config.gameLength}-${config.stintLength}-${config.goalkeeperBlockStints}-${savedLive?.savedAt || 'new'}`}
-          config={config}
-          initialRotation={rotation}
-          initialLive={savedLive}
-          onExit={handleGameExit}
-        />
-      )}
-    </div>
+function chip(id, kind, tag) {
+  const g = S.game;
+  const t = g ? playedNow(g, id) : 0;
+  return h('span', { class: 'chip ' + kind },
+    nameOf(id),
+    tag ? h('span', { class: 't' }, tag) : (g && g.state !== 'pre' ? h('span', { class: 't' }, mins(t) + 'm') : null)
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+function barRow(id, ms, gkPart, max) {
+  const pct = (v) => (max ? (v / max) * 100 : 0);
+  const fieldPart = Math.max(0, ms - gkPart);
+  return h('div', { class: 'bar-row' },
+    h('div', { class: 'who' }, nameOf(id)),
+    h('div', { class: 'bar-track' },
+      h('div', { class: 'bar-fill', style: { width: pct(fieldPart) + '%' } }),
+      gkPart > 0 ? h('div', { class: 'bar-fill gk', style: { width: pct(gkPart) + '%' } }) : null
+    ),
+    h('div', { class: 't' }, mins(ms) + 'm')
+  );
+}
+function gkLegend() {
+  return h('div', { class: 'legend' },
+    h('span', null, h('i', { style: { background: 'var(--on-fill)' } }), 'Outfield'),
+    h('span', null, h('i', { style: { background: 'var(--gk-fill)' } }), 'In goal')
+  );
+}
+
+/* ---------------------------- 3. match ----------------------------- */
+function screenMatch() {
+  const g = S.game, cfg = S.cfg;
+  const sc = score(g);
+  const wrap = h('div', { class: 'match' + (g.due && g.state === 'live' ? ' due-state' : '') });
+
+  /* rail: period, the authoritative clock, the score */
+  wrap.append(h('div', { class: 'rail' },
+    h('button', { class: 'rail-btn', onclick: () => open('sheet', { tab: 'minutes' }), 'aria-label': 'Match details' }, '☰'),
+    h('div', { class: 'rail-clock grow' },
+      h('span', { class: 'period-chip' + (g.running ? ' live' : ''), id: 'period-chip' }, periodName(g.period, cfg.periods)),
+      h('span', { class: 'rail-time fig' + (g.running ? '' : ' paused'), id: 'rail-time' }, mmss(g.clockMs))
+    ),
+    h('button', {
+      class: 'rail-score', onclick: () => open('goal'), 'aria-label': 'Score, tap to record a goal'
+    },
+      h('span', { class: 'fig us' }, sc.us), h('span', { class: 'sep' }, '–'), h('span', { class: 'fig' }, sc.them)
+    )
+  ));
+
+  /* progress: one bar per period, ticked at every planned swap */
+  const spp = stintsPerPeriod(cfg);
+  wrap.append(h('div', { class: 'prog' },
+    Array.from({ length: cfg.periods }, (_, i) => {
+      const n = i + 1;
+      const pct = n < g.period ? 100 : n > g.period ? 0 : (g.clockMs / periodMs(cfg)) * 100;
+      return h('div', { class: 'prog-seg' },
+        h('div', { class: 'fill', id: n === g.period ? 'prog-live' : null, style: { width: pct + '%' } }),
+        Array.from({ length: spp - 1 }, (_, k) =>
+          h('div', { class: 'tick', style: { left: ((k + 1) / spp) * 100 + '%' } }))
+      );
+    })
+  ));
+
+  const body = h('div', { class: 'match-body' });
+  wrap.append(body);
+
+  /* hero: the one number that tells the coach what to do next */
+  const bMs = boundaryMs(cfg, g.stint);
+  const left = Math.max(0, bMs - g.clockMs);
+  const isLast = g.stint >= spp - 1;
+  body.append(h('div', { class: 'hero' + (g.due ? ' due' : ''), id: 'hero' },
+    // only the label is announced — a countdown read out every second is
+    // useless to a screen reader
+    h('div', { class: 'lbl', 'aria-live': 'assertive' },
+      g.due ? (isLast ? breakName(g.period, cfg.periods) : 'Swap them now')
+            : (isLast ? 'Break in' : 'Next swap in')),
+    h('div', {
+      class: 'cd fig' + (!g.due && left <= 30000 ? ' warn' : ''), id: 'hero-cd',
+      role: 'timer', 'aria-hidden': 'true'
+    }, g.due ? 'SWAP' : mmss(left)),
+    h('div', { class: 'sub note', id: 'hero-sub' },
+      'Stint ' + (g.stint + 1) + ' of ' + spp + ' · ' + periodLong(g.period, cfg.periods) +
+      (g.running ? '' : ' · paused'))
+  ));
+
+  /* the board */
+  body.append(boardEl(g));
+
+  /* who is out there, with their running totals */
+  const bench = g.squad.filter(id => !g.out.includes(id) && !onPitch(g).includes(id));
+  body.append(h('div', { class: 'strip' },
+    h('div', null, lbl('On the pitch'),
+      h('div', { class: 'strip-row', style: { marginTop: '6px' } },
+        g.gk ? chip(g.gk, 'keeper') : null,
+        g.field.map(id => chip(id, 'pitch'))
+      )
+    ),
+    bench.length ? h('div', null, lbl('Bench · least played first'),
+      h('div', { class: 'strip-row', style: { marginTop: '6px' } },
+        bench.slice().sort((a, b) => playedNow(g, a) - playedNow(g, b)).map(id => chip(id, 'bench'))
+      )
+    ) : null,
+    g.out.length ? h('div', null, lbl('Gone home'),
+      h('div', { class: 'strip-row', style: { marginTop: '6px' } }, g.out.map(id => chip(id, 'bench gone')))
+    ) : null
+  ));
+
+  /* dock — every match-time action within thumb reach */
+  const canSwap = !!(g.pending && (g.pending.out.length || g.pending.in.length ||
+    (g.pending.gkTo && g.pending.gkTo !== g.pending.gkFrom)));
+  const primary = g.due
+    ? h('button', { class: 'btn warn big grow', onclick: applySubs },
+        g.running ? 'Subs made' : 'Done — play on')
+    : g.running
+      ? h('button', { class: 'btn go big grow', disabled: !canSwap, onclick: applySubs }, 'Swap now')
+      : h('button', { class: 'btn go big grow', onclick: startClock }, g.clockMs > 0 ? 'Resume' : 'Start clock');
+
+  wrap.append(h('div', { class: 'dock' },
+    h('button', {
+      class: 'btn square', 'aria-label': g.running ? 'Pause the clock' : 'Start the clock',
+      onclick: () => g.running ? pauseClock() : startClock()
+    }, g.running ? '❚❚' : '▶'),
+    primary,
+    h('button', { class: 'btn square', onclick: () => open('goal'), 'aria-label': 'Record a goal' }, '⚽')
+  ));
+
+  return wrap;
+}
+
+function boardEl(g) {
+  const p = g.pending;
+  const keeperChanges = p && p.gkTo && p.gkFrom && p.gkTo !== p.gkFrom;
+
+  if (!p || (!p.out.length && !p.in.length && !keeperChanges)) {
+    return h('div', { class: 'board solo' },
+      h('div', { class: 'col' },
+        h('div', { class: 'col-head lbl' }, 'Next swap'),
+        h('div', { class: 'col-empty' },
+          g.squad.filter(id => !g.out.includes(id)).length <= S.cfg.onField
+            ? 'Full squad on — nobody to rotate.'
+            : 'No changes at the next stint.')
+      )
+    );
+  }
+
+  const col = (kind, arrow, label, ids) => h('div', { class: 'col ' + kind },
+    h('div', { class: 'col-head' }, h('span', { class: 'arrow' }, arrow), h('span', { class: 'lbl', style: { color: 'inherit' } }, label)),
+    ids.length
+      ? h('div', { class: 'col-names' }, ids.map(id => h('div', { class: 'who' }, nameOf(id))))
+      : h('div', { class: 'col-empty' }, '—')
+  );
+
+  const board = h('div', { class: 'board' },
+    col('out', '↓', 'Coming off', p.out),
+    col('in', '↑', 'Going on', p.in)
+  );
+
+  if (!keeperChanges) return board;
+  return h('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+    board,
+    h('div', { class: 'keeper-swap' },
+      h('span', { class: 'lbl', style: { color: 'inherit' } }, 'In goal'),
+      h('span', { class: 'nm' }, nameOf(p.gkFrom)), '→', h('span', { class: 'nm' }, nameOf(p.gkTo))
+    )
+  );
+}
+
+/* ======================= overlays: sheets & curtains ================ */
+function paintLayer() {
+  const layer = document.getElementById('layer');
+  const kids = [];
+  const g = S.game;
+
+  if (g && g.state === 'break') kids.push(curtainBreak(g));
+  else if (g && g.state === 'ft') kids.push(curtainFullTime(g));
+
+  if (overlay) {
+    if (overlay.kind === 'sheet') kids.push(sheetMatch(overlay.tab || 'minutes'));
+    else if (overlay.kind === 'goal') kids.push(sheetGoal());
+    else if (overlay.kind === 'roster') kids.push(sheetRoster());
+    else if (overlay.kind === 'settings') kids.push(sheetSettings());
+  }
+
+  if (toastState) {
+    kids.push(h('div', { class: 'toast' },
+      h('span', null, toastState.text),
+      toastState.action ? h('button', {
+        onclick: () => { const a = toastState.action; toastState = null; clearTimeout(toastTimer); a(); }
+      }, toastState.actionLabel) : null
+    ));
+  }
+  layer.replaceChildren(...kids);
+}
+
+function veil(inner) {
+  return h('div', { class: 'veil', onclick: (e) => { if (e.target.classList.contains('veil')) close(); } }, inner);
+}
+function sheet(title, bodyKids, footKids) {
+  return veil(h('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' },
+    h('div', { class: 'grabber' }),
+    h('div', { class: 'sheet-head' }, h('h2', null, title),
+      h('button', { class: 'rail-btn', onclick: close, 'aria-label': 'Close' }, '✕')),
+    h('div', { class: 'sheet-body' }, bodyKids),
+    footKids ? h('div', { class: 'sheet-foot' }, footKids) : null
+  ));
+}
+
+/* --- match sheet: minutes / goals / squad / clock --- */
+function sheetMatch(tab) {
+  const g = S.game;
+  const tabs = [['minutes', 'Minutes'], ['goals', 'Goals'], ['squad', 'Squad'], ['clock', 'Clock']];
+  const seg = h('div', { class: 'segs', style: { marginBottom: '14px' } },
+    tabs.map(([k, t]) => h('button', { class: tab === k ? 'on' : '', onclick: () => open('sheet', { tab: k }) }, t)));
+
+  let panel;
+  if (tab === 'minutes') panel = panelMinutes(g);
+  else if (tab === 'goals') panel = panelGoals(g);
+  else if (tab === 'squad') panel = panelSquad(g);
+  else panel = panelClock(g);
+
+  return sheet('Match', [seg, panel],
+    h('div', { class: 'row' },
+      h('button', { class: 'btn quiet grow', disabled: !g.hist.length, onclick: () => { close(); undo(); } }, 'Undo last'),
+      h('button', { class: 'btn quiet grow', onclick: () => open('settings') }, 'Settings'),
+      h('button', { class: 'btn grow', onclick: close }, 'Close')
+    ));
+}
+
+function panelMinutes(g) {
+  const avail = g.squad.filter(id => !g.out.includes(id));
+  const rows = avail.map(id => [id, playedNow(g, id), g.gkMs[id] || 0]).sort((a, b) => b[1] - a[1]);
+  if (!rows.length) return h('div', { class: 'empty' }, 'No players.');
+  const max = rows[0][1] || 1;
+  const spread = rows[0][1] - rows[rows.length - 1][1];
+  return h('div', null,
+    h('div', { class: 'note', style: { marginBottom: '10px' } },
+      rows.length < 2 ? '' :
+      spread < 60000
+        ? 'Everyone is within a minute of each other.'
+        : 'Widest gap right now: ' + minsPrecise(spread) + '.'),
+    h('div', { class: 'bars' }, rows.map(([id, ms, gk], i) =>
+      h('div', { class: 'bar-row' + (i === rows.length - 1 && rows.length > 1 ? ' least' : '') },
+        h('div', { class: 'who' }, nameOf(id)),
+        h('div', { class: 'bar-track' },
+          h('div', { class: 'bar-fill', style: { width: (max ? ((ms - gk) / max) * 100 : 0) + '%' } }),
+          gk > 0 ? h('div', { class: 'bar-fill gk', style: { width: (max ? (gk / max) * 100 : 0) + '%' } }) : null
+        ),
+        h('div', { class: 't' }, minsPrecise(ms))
+      ))),
+    S.cfg.useGk ? gkLegend() : null,
+    g.out.length ? h('div', { class: 'sec' }, lbl('Gone home'),
+      h('div', { class: 'strip-row', style: { marginTop: '8px' } },
+        g.out.map(id => h('span', { class: 'chip bench' }, nameOf(id), h('span', { class: 't' }, minsPrecise(playedNow(g, id))))))
+    ) : null
+  );
+}
+
+function panelGoals(g) {
+  const sc = score(g);
+  const byPlayer = {};
+  g.goals.forEach(x => { if (x.us && x.pid) byPlayer[x.pid] = (byPlayer[x.pid] || 0) + 1; });
+  return h('div', null,
+    h('div', { class: 'card', style: { textAlign: 'center' } },
+      lbl('Score'),
+      h('div', { class: 'fig', style: { fontSize: '40px', marginTop: '4px' } },
+        h('span', { style: { color: 'var(--on)' } }, sc.us), ' – ', sc.them)
+    ),
+    h('button', { class: 'btn go tall', style: { width: '100%', marginTop: '12px' }, onclick: () => open('goal') }, 'Record a goal'),
+    Object.keys(byPlayer).length ? h('div', { class: 'sec' }, lbl('Scorers'),
+      h('div', { class: 'strip-row', style: { marginTop: '8px' } },
+        Object.entries(byPlayer).sort((a, b) => b[1] - a[1]).map(([id, n]) =>
+          h('span', { class: 'chip pitch' }, nameOf(id), h('span', { class: 't' }, '×' + n))))) : null,
+    h('div', { class: 'sec' }, lbl('Timeline'),
+      g.goals.length
+        ? h('div', { style: { marginTop: '8px' } }, g.goals.slice().reverse().map(x =>
+            h('div', { class: 'bar-row', style: { gridTemplateColumns: '1fr auto auto', gap: '10px', padding: '8px 0', borderBottom: '1px solid var(--line)' } },
+              h('div', { class: 'who', style: { color: x.us ? 'var(--on)' : 'var(--ink-2)' } },
+                x.us ? (x.pid ? nameOf(x.pid) : 'Us') : 'Opponent'),
+              h('div', { class: 't' }, periodName(x.period, S.cfg.periods) + ' ' + mmss(x.ms)),
+              h('button', { class: 'btn quiet', style: { minHeight: '34px', padding: '0 10px', fontSize: '12px' }, onclick: () => removeGoal(x.id) }, 'Delete')
+            )))
+        : h('div', { class: 'empty' }, 'No goals yet.'))
+  );
+}
+
+function panelSquad(g) {
+  const swapPick = panelSquad.pick || null;
+  const setPick = (id) => {
+    if (!swapPick) { panelSquad.pick = id; paintLayer(); return; }
+    if (swapPick === id) { panelSquad.pick = null; paintLayer(); return; }
+    panelSquad.pick = null;
+    swap(swapPick, id);
+    paintLayer();
+  };
+  const pitch = onPitch(g);
+  const bench = g.squad.filter(id => !g.out.includes(id) && !pitch.includes(id));
+
+  const tapChip = (id, kind) => h('button', {
+    class: 'chip tapable ' + kind + (swapPick === id ? ' picked' : ''),
+    onclick: () => setPick(id)
+  }, nameOf(id));
+
+  return h('div', null,
+    h('div', { class: 'note' }, 'Tap one player on the pitch and one on the bench to swap them right now. The rest of the match replans itself around it.'),
+    h('div', { class: 'sec' }, lbl('On the pitch'),
+      h('div', { class: 'strip-row', style: { marginTop: '8px' } },
+        g.gk ? tapChip(g.gk, 'keeper') : null,
+        g.field.map(id => tapChip(id, 'pitch')))),
+    h('div', { class: 'sec' }, lbl('Bench'),
+      bench.length
+        ? h('div', { class: 'strip-row', style: { marginTop: '8px' } }, bench.map(id => tapChip(id, 'bench')))
+        : h('div', { class: 'empty' }, 'Nobody on the bench.')),
+    h('hr', { class: 'hr' }),
+    h('div', null, lbl('Someone arrived late or had to leave'),
+      h('div', { class: 'tiles', style: { marginTop: '8px' } },
+        S.roster.map(p => {
+          const out = g.out.includes(p.id);
+          const inSquad = g.squad.includes(p.id) && !out;
+          return h('button', {
+            class: 'tile' + (inSquad ? ' in' : ''),
+            onclick: () => { setAvailable(p.id, !inSquad); paintLayer(); }
+          },
+            h('div', { class: 'who' }, p.name),
+            h('div', { class: 'meta' }, inSquad ? 'Playing' : 'Out'));
+        })))
+  );
+}
+
+function panelClock(g) {
+  const nudge = (sec) => { syncClock(); setClock(g.clockMs + sec * 1000); paintLayer(); };
+  return h('div', null,
+    h('div', { class: 'card', style: { textAlign: 'center' } },
+      lbl(periodLong(g.period, S.cfg.periods)),
+      h('div', { class: 'fig', style: { fontSize: '46px', lineHeight: 1, marginTop: '4px' } }, mmss(g.clockMs)),
+      h('div', { class: 'note', style: { marginTop: '4px' } }, 'of ' + S.cfg.periodMin + ':00')
+    ),
+    h('div', { class: 'row', style: { marginTop: '12px' } },
+      h('button', { class: 'btn grow', onclick: () => nudge(-30) }, '−30s'),
+      h('button', { class: 'btn grow', onclick: () => nudge(-10) }, '−10s'),
+      h('button', { class: 'btn grow', onclick: () => nudge(10) }, '+10s'),
+      h('button', { class: 'btn grow', onclick: () => nudge(30) }, '+30s')
+    ),
+    h('div', { class: 'note', style: { marginTop: '10px' } },
+      'Adjusting the clock keeps everyone’s minutes as they were — it only moves the swap timer.'),
+    h('hr', { class: 'hr' }),
+    h('button', { class: 'btn tall', style: { width: '100%' }, onclick: () => { close(); raiseDue(true); } },
+      'End the ' + periodLong(g.period, S.cfg.periods) + ' now'),
+    h('button', { class: 'btn danger tall', style: { width: '100%', marginTop: '8px' }, onclick: () => { close(); endMatch(); } },
+      'End the match')
+  );
+}
+
+/* --- goal sheet: one tap for the common case --- */
+function sheetGoal() {
+  const g = S.game;
+  const pitch = onPitch(g);
+  return sheet('Who scored?', [
+    h('div', { class: 'note', style: { marginBottom: '10px' } }, 'Tap a name for one of ours, or the button below for the other lot.'),
+    h('div', { class: 'tiles' },
+      pitch.map(id => h('button', {
+        class: 'tile in', onclick: () => { close(); addGoal(true, id); }
+      }, h('div', { class: 'who' }, nameOf(id)), h('div', { class: 'meta' }, id === g.gk ? 'Keeper' : 'On the pitch')))
+    ),
+    h('button', { class: 'btn tall', style: { width: '100%', marginTop: '10px' }, onclick: () => { close(); addGoal(true, null); } },
+      'One of ours — not sure who'),
+  ],
+    h('button', { class: 'btn danger big', style: { width: '100%' }, onclick: () => { close(); addGoal(false, null); } },
+      'Goal for the opponent'));
+}
+
+/* --- roster editor --- */
+function sheetRoster() {
+  const input = h('input', { class: 'input', placeholder: 'Player name', autocapitalize: 'words', autocomplete: 'off' });
+  const add = () => {
+    const n = input.value.trim();
+    if (!n) return;
+    if (S.roster.some(p => p.name.toLowerCase() === n.toLowerCase())) { input.value = ''; return; }
+    const p = { id: uid(), name: n, gk: false };
+    S.roster.push(p);
+    S.lastSquad.push(p.id);
+    input.value = '';
+    save(); render();
+    setTimeout(() => { const el = document.querySelector('.sheet .input'); el && el.focus(); }, 0);
+  };
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+
+  return sheet('Your team', [
+    h('div', { class: 'row' }, input, h('button', { class: 'btn go', onclick: add }, 'Add')),
+    S.cfg.useGk
+      ? h('div', { class: 'note', style: { marginTop: '10px' } }, 'Tap the glove to say who is allowed in goal.')
+      : null,
+    h('div', { class: 'sec' },
+      S.roster.length
+        ? h('div', { style: { display: 'flex', flexDirection: 'column' } },
+            S.roster.map(p => h('div', { class: 'bar-row', style: { gridTemplateColumns: '1fr auto auto', gap: '8px', padding: '8px 0', borderBottom: '1px solid var(--line)' } },
+              h('div', { class: 'who', style: { fontSize: '16px' } }, p.name),
+              S.cfg.useGk ? h('button', {
+                class: 'btn quiet', style: { minHeight: '38px', padding: '0 12px', color: p.gk ? 'var(--gk)' : 'var(--ink-3)' },
+                onclick: () => { p.gk = !p.gk; save(); render(); }
+              }, p.gk ? '🧤 Keeper' : '🧤') : null,
+              h('button', {
+                class: 'btn quiet', style: { minHeight: '38px', padding: '0 12px', color: 'var(--alert)' },
+                onclick: () => {
+                  S.roster = S.roster.filter(x => x.id !== p.id);
+                  S.lastSquad = S.lastSquad.filter(x => x !== p.id);
+                  save(); render();
+                }
+              }, 'Remove')
+            )))
+        : h('div', { class: 'empty' }, 'No players yet.'))
+  ],
+    h('button', { class: 'btn go big', style: { width: '100%' }, onclick: close }, 'Done'));
+}
+
+/* --- settings --- */
+function sheetSettings() {
+  const cfg = S.cfg;
+  const sw = (title, sub, key, after) => h('button', {
+    class: 'switch' + (cfg[key] ? ' on' : ''), style: { width: '100%', textAlign: 'left' },
+    'aria-pressed': cfg[key] ? 'true' : 'false',
+    onclick: () => { cfg[key] = !cfg[key]; after && after(); save(); render(); }
+  },
+    h('div', { class: 'cap' }, h('div', { class: 't', style: { fontSize: '15px', fontWeight: 700 } }, title),
+      h('div', { class: 'note' }, sub)),
+    h('span', { class: 'track' })
+  );
+
+  return sheet('Settings', [
+    lbl('During the match'),
+    sw('Stop the clock at every swap', 'The buzzer pauses the clock; “Done” starts it again. Turn off if you sub on the fly.', 'pauseAtSub'),
+    sw('Buzzer', 'A loud two-tone blast at every swap, break and full time.', 'sound'),
+    sw('Vibrate', 'In case the phone is in a pocket.', 'haptics'),
+
+    h('hr', { class: 'hr' }),
+    lbl('Goalkeeper'),
+    sw('Play with a keeper', 'Off by default — plenty of young leagues do not bother.', 'useGk', () => {
+      if (S.cfg.useGk && !S.roster.some(p => p.gk)) S.roster.forEach(p => { p.gk = true; });
+    }),
+    cfg.useGk ? h('div', { class: 'steps', style: { marginTop: '6px' } },
+      stepper('Keeper changes every', cfg.gkEvery + ' stint' + (cfg.gkEvery === 1 ? '' : 's'), cfg.gkEvery, 1, 12, v => { cfg.gkEvery = v; })
+    ) : null,
+    cfg.useGk ? sw('Time in goal counts as playing time', 'Off means a keeper still gets their full share of outfield minutes.', 'gkCounts') : null,
+
+    h('hr', { class: 'hr' }),
+    lbl('Screen'),
+    h('div', { class: 'segs', style: { marginTop: '8px' } },
+      [['auto', 'Auto'], ['day', 'Daylight'], ['night', 'Night']].map(([k, t]) =>
+        h('button', { class: cfg.theme === k ? 'on' : '', onclick: () => { cfg.theme = k; save(); render(); } }, t))),
+    h('div', { class: 'note', style: { marginTop: '8px' } }, 'Daylight is a high-contrast mode for bright sun, not just a light theme.'),
+
+    S.game ? h('div', null, h('hr', { class: 'hr' }),
+      h('button', {
+        class: 'btn danger tall', style: { width: '100%' },
+        onclick: () => { if (confirm('Abandon this match? Minutes and goals will be lost.')) { S.game = null; close(); save(); render(); } }
+      }, 'Abandon this match')) : null
+  ],
+    h('button', { class: 'btn go big', style: { width: '100%' }, onclick: close }, 'Done'));
+}
+
+/* --- period break --- */
+function curtainBreak(g) {
+  const cfg = S.cfg, sc = score(g);
+  const p = g.pending;
+  const benchNext = p ? g.squad.filter(id => !g.out.includes(id) && !p.field.includes(id) && id !== p.gk) : [];
+  return h('div', { class: 'curtain' },
+    h('div', { style: { flex: '0 0 auto' } },
+      lbl(periodLong(g.period, cfg.periods) + ' over'),
+      h('div', { class: 'big-label', style: { marginTop: '4px' } }, breakName(g.period, cfg.periods)),
+      h('div', { class: 'score-line', style: { marginTop: '10px' } },
+        h('span', { style: { color: 'var(--on)' } }, sc.us), ' – ', sc.them)
+    ),
+    h('div', { class: 'scroll', style: { padding: '18px 0 0', flex: 1 } },
+      p ? h('div', null,
+        lbl('Starting the ' + periodLong(g.period + 1, cfg.periods)),
+        h('div', { class: 'strip-row', style: { marginTop: '8px' } },
+          p.gk ? chip(p.gk, 'keeper', 'GK') : null,
+          p.field.map(id => chip(id, 'pitch'))),
+        benchNext.length ? h('div', { style: { marginTop: '14px' } },
+          lbl('Starting on the bench'),
+          h('div', { class: 'strip-row', style: { marginTop: '8px' } },
+            benchNext.map(id => chip(id, 'bench')))
+        ) : null
+      ) : null,
+      h('div', { class: 'sec' }, lbl('Minutes so far'),
+        h('div', { style: { marginTop: '8px' } }, panelMinutes(g)))
+    ),
+    h('div', { class: 'row', style: { paddingTop: '10px' } },
+      h('button', { class: 'btn square', onclick: () => open('sheet', { tab: 'squad' }), 'aria-label': 'Change the squad' }, '☰'),
+      h('button', { class: 'btn go big grow', onclick: startNextPeriod }, 'Start the ' + periodLong(g.period + 1, cfg.periods))
+    )
+  );
+}
+
+/* --- full time --- */
+function curtainFullTime(g) {
+  const cfg = S.cfg, sc = score(g);
+  const avail = g.squad.slice();
+  const rows = avail.map(id => [id, playedNow(g, id), g.gkMs[id] || 0]).sort((a, b) => b[1] - a[1]);
+  const max = rows.length ? rows[0][1] || 1 : 1;
+  const byPlayer = {};
+  g.goals.forEach(x => { if (x.us && x.pid) byPlayer[x.pid] = (byPlayer[x.pid] || 0) + 1; });
+
+  const summary = () => {
+    const lines = [];
+    lines.push('Full time: ' + sc.us + '–' + sc.them);
+    const scorers = Object.entries(byPlayer).sort((a, b) => b[1] - a[1])
+      .map(([id, n]) => nameOf(id) + (n > 1 ? ' ×' + n : ''));
+    if (scorers.length) lines.push('Scorers: ' + scorers.join(', '));
+    lines.push('Minutes: ' + rows.map(([id, ms]) => nameOf(id) + ' ' + mins(ms)).join(', '));
+    return lines.join('\n');
+  };
+
+  return h('div', { class: 'curtain' },
+    h('div', { style: { flex: '0 0 auto' } },
+      lbl('Full time'),
+      h('div', { class: 'score-line', style: { marginTop: '6px' } },
+        h('span', { style: { color: 'var(--on)' } }, sc.us), ' – ', sc.them),
+      h('div', { class: 'note', style: { marginTop: '4px' } },
+        sc.us > sc.them ? 'A win.' : sc.us < sc.them ? 'Next week.' : 'Honours even.')
+    ),
+    h('div', { class: 'scroll', style: { padding: '18px 0 0', flex: 1 } },
+      Object.keys(byPlayer).length ? h('div', null, lbl('Scorers'),
+        h('div', { class: 'strip-row', style: { marginTop: '8px' } },
+          Object.entries(byPlayer).sort((a, b) => b[1] - a[1]).map(([id, n]) =>
+            h('span', { class: 'chip pitch' }, nameOf(id), h('span', { class: 't' }, '×' + n))))) : null,
+      h('div', { class: 'sec' }, lbl('Minutes played'),
+        h('div', { class: 'bars', style: { marginTop: '8px' } },
+          rows.map(([id, ms, gk]) => h('div', { class: 'bar-row' },
+            h('div', { class: 'who' }, nameOf(id)),
+            h('div', { class: 'bar-track' },
+              h('div', { class: 'bar-fill', style: { width: ((ms - gk) / max) * 100 + '%' } }),
+              gk > 0 ? h('div', { class: 'bar-fill gk', style: { width: (gk / max) * 100 + '%' } }) : null),
+            h('div', { class: 't' }, minsPrecise(ms))
+          ))),
+        cfg.useGk ? gkLegend() : null)
+    ),
+    h('div', { class: 'row', style: { paddingTop: '10px' } },
+      h('button', {
+        class: 'btn grow', onclick: async () => {
+          try { await navigator.clipboard.writeText(summary()); toast('Summary copied'); }
+          catch (e) { toast('Could not copy'); }
+        }
+      }, 'Copy summary'),
+      h('button', { class: 'btn go grow', onclick: () => { S.game = null; save(); render(); } }, 'Done')
+    )
+  );
+}
+
+/* ------------------------------ the tick ---------------------------- */
+/* Only the numbers that change every second get rewritten; the rest of
+   the screen is left alone so a re-render never eats a tap. */
+let lastHeartbeat = 0;
+function tick() {
+  const g = S.game;
+  if (!g || g.state === 'pre') return;
+  if (g.running) syncClock();
+
+  const cfg = S.cfg;
+  const bMs = boundaryMs(cfg, g.stint);
+  const spp = stintsPerPeriod(cfg);
+
+  // The period ending is checked on its own, so a coach who subs on the
+  // fly and never taps "subs made" still gets a half-time whistle.
+  if (g.state === 'live' && g.clockMs >= periodMs(cfg) - 1) { raiseDue(true); return; }
+  if (g.state === 'live' && !g.due && g.clockMs >= bMs - 1) { raiseDue(false); return; }
+
+  // keep the saved clock fresh so a reload can pick up where it left off
+  if (g.running && Date.now() - lastHeartbeat > 5000) { lastHeartbeat = Date.now(); save(true); }
+
+  const t = document.getElementById('rail-time');
+  if (t) {
+    t.textContent = mmss(g.clockMs);
+    t.classList.toggle('paused', !g.running);
+  }
+  const pc = document.getElementById('period-chip');
+  if (pc) pc.classList.toggle('live', !!g.running);
+
+  const cd = document.getElementById('hero-cd');
+  if (cd && !g.due) {
+    const left = Math.max(0, bMs - g.clockMs);
+    cd.textContent = mmss(left);
+    cd.classList.toggle('warn', left <= 30000);
+  }
+  const sub = document.getElementById('hero-sub');
+  if (sub && !g.due) {
+    sub.textContent = 'Stint ' + (g.stint + 1) + ' of ' + spp + ' · ' + periodLong(g.period, cfg.periods) +
+      (g.running ? '' : ' · paused');
+  }
+  const bar = document.getElementById('prog-live');
+  if (bar) bar.style.width = (g.clockMs / periodMs(cfg)) * 100 + '%';
+}
+setInterval(tick, 250);
+
+/* Recover from a reload mid-match. A browser tab that reloaded two
+   seconds ago should not cost the team two seconds of game clock, but a
+   phone that has been shut in a bag for an hour should not gain an hour
+   either — so short gaps are honoured and long ones just pause. */
+(function recover() {
+  const g = S.game;
+  if (!g || !g.running) return;
+  const gap = Date.now() - (S.savedAt || 0);
+  if (gap >= 0 && gap < 5 * 60000) {
+    g.clockMs = Math.min(periodMs(S.cfg), g.clockMs + gap);
+    g.runBase = g.clockMs;
+    g.runFrom = Date.now();
+  } else {
+    g.running = false;
+    g.runFrom = null;
+  }
+})();
+
+document.addEventListener('keydown', (e) => {
+  if (e.target.matches('input, textarea')) return;
+  const g = S.game;
+  if (e.key === 'Escape' && overlay) { close(); return; }
+  if (!g || g.state === 'pre') return;
+  if (e.code === 'Space') { e.preventDefault(); g.running ? pauseClock() : startClock(); }
+  if (e.key.toLowerCase() === 's' && g.due) applySubs();
+  if (e.key.toLowerCase() === 'z' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); undo(); }
+});
+
+render();
 </script>
 </body>
 </html>
